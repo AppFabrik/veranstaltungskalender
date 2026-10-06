@@ -1178,22 +1178,17 @@ textarea{
 
       <form
         id="publicRegistrationForm"
-        action="https://formsubmit.co/lue-heim@web.de"
+        action="https://hook.eu1.make.com/0geuyiem2dtji2jt5bwjrelov3aln3lr"
         method="POST"
         enctype="multipart/form-data"
-        onsubmit="return validatePublicRegistration()"
+        target="makeWebhookFrame"
+        onsubmit="return submitPublicRegistration(event)"
       >
 
         <input
           type="hidden"
-          name="_subject"
-          value="Neue Veranstaltungsanmeldung"
-        >
-
-        <input
-          type="hidden"
-          name="_template"
-          value="table"
+          name="Anmeldungstyp"
+          value="Veranstalter"
         >
 
         <input
@@ -1201,6 +1196,8 @@ textarea{
           name="_honey"
           value=""
           style="display:none"
+          tabindex="-1"
+          autocomplete="off"
         >
 
         <div class="form-grid">
@@ -1324,19 +1321,23 @@ textarea{
 
           <div class="form-group full">
 
-            <label for="publicLocation">
-              Veranstaltungsort <span class="public-required">*</span>
+            <label>
+              Veranstaltungsbilder
             </label>
 
-            <input
-              id="publicLocation"
-              name="Veranstaltungsort"
-              required
-              placeholder="z. B. Festplatz Heimburg"
-            >
+            <div class="public-upload" style="display:block">
+              <input id="publicImage1" name="Bild 1" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+              <input id="publicImage2" name="Bild 2" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="margin-top:8px">
+              <input id="publicImage3" name="Bild 3" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="margin-top:8px">
+              <input id="publicImage4" name="Bild 4" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="margin-top:8px">
+              <input id="publicImage5" name="Bild 5" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="margin-top:8px">
+            </div>
+
+            <div class="public-upload-info">
+              Bis zu 5 Bilder · JPG, PNG, WEBP oder GIF · maximal 10 MB je Bild
+            </div>
 
           </div>
-
 
           <div class="form-group full">
 
@@ -1415,6 +1416,8 @@ textarea{
         </div>
 
       </form>
+
+      <iframe name="makeWebhookFrame" id="makeWebhookFrame" title="Formularübertragung" style="display:none;width:0;height:0;border:0"></iframe>
 
     </div>
 
@@ -1638,15 +1641,20 @@ textarea{
           <div class="form-group full">
 
             <label for="eventImage">
-              Bild-URL *
+              Veranstaltungsbild *
             </label>
 
-            <input
-              id="eventImage"
-              type="url"
-              required
-              placeholder="https://..."
-            >
+            <div class="public-upload">
+              <input
+                id="eventImage"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+              >
+            </div>
+
+            <div class="public-upload-info">
+              Bild direkt vom Rechner auswählen · JPG, PNG, WEBP oder GIF · maximal 10 MB
+            </div>
 
           </div>
 
@@ -3051,58 +3059,62 @@ function openPublicRegistration(){
 
 function validatePublicRegistration(){
 
-  const fileInput=
-    document.getElementById(
-      "publicImage"
-    );
+  const fileInputs = [
+    document.getElementById("publicImage1"),
+    document.getElementById("publicImage2"),
+    document.getElementById("publicImage3"),
+    document.getElementById("publicImage4"),
+    document.getElementById("publicImage5")
+  ];
 
-  if(
-    fileInput &&
-    fileInput.files.length
-  ){
+  const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
 
-    const file=
-      fileInput.files[0];
-
-    const allowed=[
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/gif"
-    ];
-
-    if(
-      !allowed.includes(
-        file.type
-      )
-    ){
-
-      showToast(
-        "Bitte nur JPG, PNG, WEBP oder GIF hochladen."
-      );
-
+  for(const input of fileInputs){
+    if(!input || !input.files.length) continue;
+    const file = input.files[0];
+    if(!allowed.includes(file.type)){
+      showToast("Bitte nur JPG, PNG, WEBP oder GIF hochladen.");
       return false;
-
     }
-
-    if(
-      file.size >
-      10 * 1024 * 1024
-    ){
-
-      showToast(
-        "Das Bild darf maximal 10 MB groß sein."
-      );
-
+    if(file.size > 10 * 1024 * 1024){
+      showToast("Jedes Bild darf maximal 10 MB groß sein.");
       return false;
-
     }
-
   }
 
   return true;
-
 }
+
+
+function submitPublicRegistration(event){
+
+  event.preventDefault();
+
+  if(!validatePublicRegistration()) return false;
+
+  const form = document.getElementById("publicRegistrationForm");
+  const submitButton = form.querySelector('button[type="submit"]');
+
+  if(submitButton){
+    submitButton.disabled = true;
+    submitButton.textContent = "📩 Wird übermittelt …";
+  }
+
+  HTMLFormElement.prototype.submit.call(form);
+
+  setTimeout(() => {
+    closeModal("publicRegistrationModal");
+    showToast("Vielen Dank! Ihre Veranstaltung wurde übermittelt.");
+    form.reset();
+    if(submitButton){
+      submitButton.disabled = false;
+      submitButton.textContent = "📩 Veranstaltung anmelden";
+    }
+  }, 900);
+
+  return false;
+}
+
 
 
 /* ---------------------------------
@@ -3359,7 +3371,7 @@ function openAdminEdit(id){
   document.getElementById(
     "eventImage"
   ).value =
-    event.image || "";
+    "";
 
 
   document.getElementById(
@@ -3412,7 +3424,17 @@ function openAdminEdit(id){
    ADMIN: SPEICHERN
 --------------------------------- */
 
-function saveEvent(eventSubmit){
+
+function readFileAsDataURL(file){
+  return new Promise((resolve,reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveEvent(eventSubmit){
 
   eventSubmit.preventDefault();
 
@@ -3441,6 +3463,38 @@ function saveEvent(eventSubmit){
       event =>
         event.id === id
     );
+
+
+  const imageInput =
+    document.getElementById("eventImage");
+
+  let imageData =
+    existing
+      ? existing.image || ""
+      : "";
+
+  if(!existing && !imageInput.files.length){
+    showToast("Bitte ein Veranstaltungsbild auswählen.");
+    return;
+  }
+
+  if(imageInput.files.length){
+
+    const file = imageInput.files[0];
+    const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
+
+    if(!allowed.includes(file.type)){
+      showToast("Bitte nur JPG, PNG, WEBP oder GIF hochladen.");
+      return;
+    }
+
+    if(file.size > 10 * 1024 * 1024){
+      showToast("Das Bild darf maximal 10 MB groß sein.");
+      return;
+    }
+
+    imageData = await readFileAsDataURL(file);
+  }
 
 
   const eventData = {
@@ -3483,9 +3537,7 @@ function saveEvent(eventSubmit){
       ).value.trim(),
 
     image:
-      document.getElementById(
-        "eventImage"
-      ).value.trim(),
+      imageData,
 
     website:
       document.getElementById(
