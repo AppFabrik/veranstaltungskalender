@@ -1254,7 +1254,7 @@ textarea{
           <div class="form-group">
 
             <label for="publicDate">
-              Datum <span class="public-required">*</span>
+              Von Datum <span class="public-required">*</span>
             </label>
 
             <input
@@ -1262,6 +1262,22 @@ textarea{
               name="Datum"
               type="date"
               required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicEndDate">
+              Bis Datum <span class="optional-label">(optional)</span>
+            </label>
+
+            <input
+              id="publicEndDate"
+              name="Enddatum"
+              type="date"
+              onchange="validateDateRange('publicDate','publicEndDate')"
             >
 
           </div>
@@ -1321,29 +1337,6 @@ textarea{
 
           <div class="form-group full">
 
-            <label for="publicImage">
-              Veranstaltungsbild
-            </label>
-
-            <div class="public-upload">
-
-              <input
-                id="publicImage"
-                name="Bild"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-              >
-
-            </div>
-
-            <div class="public-upload-info">
-              JPG, PNG, WEBP oder GIF · maximal 10 MB
-            </div>
-
-          </div>
-
-          <div class="form-group full">
-
             <label for="publicDescription">
               Beschreibung
             </label>
@@ -1353,6 +1346,30 @@ textarea{
               name="Beschreibung"
               placeholder="Weitere Informationen zur Veranstaltung …"
             ></textarea>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="publicImage">
+              Veranstaltungsbild
+            </label>
+
+            <div class="public-upload">
+
+              <input
+                id="publicImage"
+                name="attachment"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+              >
+
+            </div>
+
+            <div class="public-upload-info">
+              JPG, PNG, WEBP oder GIF · maximal 10 MB
+            </div>
 
           </div>
 
@@ -1529,13 +1546,29 @@ textarea{
           <div class="form-group">
 
             <label for="eventDate">
-              Datum *
+              Von Datum *
             </label>
 
             <input
               id="eventDate"
               type="date"
               required
+              onchange="setEndDateMinimum('eventDate','eventEndDate')"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="eventEndDate">
+              Bis Datum <span class="optional-label">(optional)</span>
+            </label>
+
+            <input
+              id="eventEndDate"
+              type="date"
+              onchange="validateDateRange('eventDate','eventEndDate')"
             >
 
           </div>
@@ -1971,6 +2004,71 @@ function formatMonth(date){
 }
 
 
+function setEndDateMinimum(startId,endId){
+
+  const start = document.getElementById(startId);
+  const end = document.getElementById(endId);
+
+  if(!start || !end) return;
+
+  end.min = start.value || "";
+
+  if(end.value && start.value && end.value < start.value){
+    end.value = start.value;
+  }
+
+}
+
+
+function validateDateRange(startId,endId){
+
+  const start = document.getElementById(startId);
+  const end = document.getElementById(endId);
+
+  if(!start || !end) return true;
+
+  end.min = start.value || "";
+
+  if(end.value && start.value && end.value < start.value){
+    showToast("Das Enddatum darf nicht vor dem Startdatum liegen.");
+    end.value = "";
+    return false;
+  }
+
+  return true;
+
+}
+
+
+function getEventEndDate(event){
+
+  return event.endDate || event.date;
+
+}
+
+
+function eventIncludesDate(event,iso){
+
+  const start = event.date;
+  const end = getEventEndDate(event);
+
+  return !!start && iso >= start && iso <= end;
+
+}
+
+
+function eventOverlapsMonth(event,year,month){
+
+  const monthStart = new Date(year,month,1);
+  const monthEnd = new Date(year,month + 1,0);
+  const start = new Date(event.date + "T12:00:00");
+  const end = new Date(getEventEndDate(event) + "T12:00:00");
+
+  return start <= monthEnd && end >= monthStart;
+
+}
+
+
 function eventDateTime(event){
 
   return new Date(
@@ -2141,15 +2239,10 @@ function renderCurrentMonthEvents(){
     getFilteredEvents()
       .filter(event => {
 
-        const date =
-          new Date(
-            event.date +
-            "T12:00:00"
-          );
-
-        return (
-          date.getFullYear() === year &&
-          date.getMonth() === month
+        return eventOverlapsMonth(
+          event,
+          year,
+          month
         );
 
       });
@@ -2217,7 +2310,11 @@ function renderEventCard(event){
       <div class="card-body">
 
         <div class="date-badge">
-          ${formatDate(event.date)}
+          ${
+            event.endDate && event.endDate !== event.date
+              ? formatDate(event.date) + " – " + formatDate(event.endDate)
+              : formatDate(event.date)
+          }
         </div>
 
 
@@ -2271,18 +2368,12 @@ function renderEventCard(event){
           </button>
 
 
-          ${
-            !event.cancelled
-              ? `
-                <button
-                  class="btn small light"
-                  onclick="downloadICal('${event.id}')"
-                >
-                  📅 In Kalender eintragen
-                </button>
-              `
-              : ""
-          }
+          <button
+            class="btn small light"
+            onclick="downloadICal('${event.id}')"
+          >
+            📅 In Kalender eintragen
+          </button>
 
         </div>
 
@@ -2485,7 +2576,7 @@ function renderSingleCalendar(
     const dayEvents =
       events.filter(
         event =>
-          event.date === iso
+          eventIncludesDate(event,iso)
       );
 
 
@@ -2843,7 +2934,11 @@ function openDetail(id){
           Datum
         </strong>
 
-        ${formatDateLong(event.date)}
+        ${
+          event.endDate && event.endDate !== event.date
+            ? formatDateLong(event.date) + " – " + formatDateLong(event.endDate)
+            : formatDateLong(event.date)
+        }
 
       </div>
 
@@ -3050,40 +3145,25 @@ function openPublicRegistration(){
 
 function validatePublicRegistration(){
 
-  const fileInput =
-    document.getElementById("publicImage");
+  if(!validateDateRange("publicDate","publicEndDate")){
+    return false;
+  }
+
+  const fileInput = document.getElementById("publicImage");
 
   if(fileInput && fileInput.files.length){
-
     const file = fileInput.files[0];
-
-    const allowed = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/gif"
-    ];
+    const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
 
     if(!allowed.includes(file.type)){
-
-      showToast(
-        "Bitte nur JPG, PNG, WEBP oder GIF hochladen."
-      );
-
+      showToast("Bitte nur JPG, PNG, WEBP oder GIF hochladen.");
       return false;
-
     }
 
     if(file.size > 10 * 1024 * 1024){
-
-      showToast(
-        "Das Bild darf maximal 10 MB groß sein."
-      );
-
+      showToast("Das Bild darf maximal 10 MB groß sein.");
       return false;
-
     }
-
   }
 
   return true;
@@ -3340,6 +3420,13 @@ function openAdminEdit(id){
   ).value =
     event.date || "";
 
+  document.getElementById(
+    "eventEndDate"
+  ).value =
+    event.endDate || "";
+
+  setEndDateMinimum("eventDate","eventEndDate");
+
 
   document.getElementById(
     "eventStart"
@@ -3454,6 +3541,11 @@ async function saveEvent(eventSubmit){
   }
 
 
+  if(!validateDateRange("eventDate","eventEndDate")){
+    return;
+  }
+
+
   const id =
     document.getElementById(
       "eventId"
@@ -3514,6 +3606,11 @@ async function saveEvent(eventSubmit){
       document.getElementById(
         "eventDate"
       ).value,
+
+    endDate:
+      document.getElementById(
+        "eventEndDate"
+      ).value || "",
 
     start:
       document.getElementById(
@@ -4081,7 +4178,7 @@ function downloadICal(id){
 
     "DTEND;TZID=Europe/Berlin:" +
       icalDateTime(
-        event.date,
+        getEventEndDate(event),
         end
       ),
 
