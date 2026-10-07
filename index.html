@@ -675,60 +675,6 @@ textarea{
   color:var(--danger)
 }
 
-/* VERANSTALTER-ZUGANG */
-
-.auth-tabs{
-  display:flex;
-  gap:8px;
-  margin-bottom:18px;
-}
-
-.auth-tabs .btn{
-  flex:1;
-}
-
-.auth-tabs .btn.active{
-  background:var(--accent-dark);
-}
-
-.auth-note{
-  margin-bottom:16px;
-  padding:12px 14px;
-  background:var(--paper2);
-  border-radius:10px;
-  font:13px/1.5 Arial,sans-serif;
-}
-
-.optional-label{
-  color:var(--muted);
-  font-weight:400;
-}
-
-.user-status{
-  display:none;
-  align-items:center;
-  gap:8px;
-  margin-top:10px;
-  padding:9px 12px;
-  border-radius:10px;
-  background:rgba(255,255,255,.14);
-  font:700 12px Arial,sans-serif;
-}
-
-.user-status.open{
-  display:flex;
-}
-
-.user-status button{
-  margin-left:auto;
-  border:0;
-  border-radius:8px;
-  padding:6px 9px;
-  background:rgba(255,255,255,.18);
-  color:#fff;
-  font:700 11px Arial,sans-serif;
-}
-
 /* TOAST */
 
 .toast{
@@ -980,22 +926,10 @@ textarea{
           Veranstaltung anmelden
         </button>
 
-        <button
-          class="btn secondary"
-          onclick="openOrganizerAccess()"
-        >
-          👤 Veranstalter-Login
-        </button>
-
         <button class="btn secondary" onclick="openAdminLogin()">
           🔒 Verwaltung
         </button>
 
-      </div>
-
-      <div id="organizerStatus" class="user-status">
-        👤 <span id="organizerStatusText"></span>
-        <button type="button" onclick="logoutOrganizer()">Abmelden</button>
       </div>
     </section>
   </header>
@@ -1214,74 +1148,6 @@ textarea{
 </div>
 
 
-<!-- VERANSTALTER-ZUGANG -->
-
-<div class="modal-backdrop" id="organizerAccessModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Veranstalter-Zugang</h2>
-      <button type="button" class="close" onclick="closeModal('organizerAccessModal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="auth-tabs">
-        <button type="button" id="loginTabButton" class="btn active" onclick="showOrganizerLogin()">Einloggen</button>
-        <button type="button" id="registerTabButton" class="btn light" onclick="showOrganizerRegistration()">Registrieren</button>
-      </div>
-
-      <div id="organizerLoginPanel">
-        <div class="auth-note">Melden Sie sich mit Ihrem persönlichen Anmeldenamen und Passwort an. Danach können Sie ausschließlich Ihre eigenen Veranstaltungen verwalten.</div>
-        <form onsubmit="loginOrganizer(event)">
-          <div class="form-group">
-            <label for="organizerLoginUsername">Anmeldename *</label>
-            <input id="organizerLoginUsername" required autocomplete="username" placeholder="Ihr Anmeldename">
-          </div>
-          <div class="form-group">
-            <label for="organizerLoginPassword">Passwort *</label>
-            <input id="organizerLoginPassword" type="password" required autocomplete="current-password" placeholder="Ihr Passwort">
-          </div>
-          <div class="admin-actions">
-            <button type="submit" class="btn">🔐 Einloggen</button>
-            <button type="button" class="btn light" onclick="showOrganizerRegistration()">Noch nicht registriert?</button>
-          </div>
-        </form>
-      </div>
-
-      <div id="organizerRegistrationPanel" style="display:none">
-        <div class="auth-note">Erstellen Sie einmalig Ihren Veranstalter-Zugang. Das Passwort legen Sie selbst fest. Die endgültige Speicherung und Prüfung erfolgt später über Make + Google Sheets.</div>
-        <form onsubmit="registerOrganizer(event)">
-          <div class="form-grid">
-            <div class="form-group full">
-              <label for="organizerRegisterUsername">Anmeldename *</label>
-              <input id="organizerRegisterUsername" required autocomplete="username" minlength="3" placeholder="z. B. Feuerwehr-Heimburg">
-            </div>
-            <div class="form-group">
-              <label for="organizerRegisterName">Name / Veranstalter *</label>
-              <input id="organizerRegisterName" required placeholder="z. B. Feuerwehr Heimburg">
-            </div>
-            <div class="form-group">
-              <label for="organizerRegisterEmail">E-Mail-Adresse *</label>
-              <input id="organizerRegisterEmail" type="email" required autocomplete="email" placeholder="ihre@email.de">
-            </div>
-            <div class="form-group">
-              <label for="organizerRegisterPassword">Passwort *</label>
-              <input id="organizerRegisterPassword" type="password" required autocomplete="new-password" minlength="8" placeholder="mindestens 8 Zeichen">
-            </div>
-            <div class="form-group">
-              <label for="organizerRegisterPassword2">Passwort wiederholen *</label>
-              <input id="organizerRegisterPassword2" type="password" required autocomplete="new-password" minlength="8" placeholder="Passwort wiederholen">
-            </div>
-          </div>
-          <div class="admin-actions">
-            <button type="submit" class="btn">👤 Konto anlegen</button>
-            <button type="button" class="btn light" onclick="showOrganizerLogin()">Zur Anmeldung</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-
 <!-- ÖFFENTLICHE VERANSTALTUNGSANMELDUNG -->
 
 <div class="modal-backdrop" id="publicRegistrationModal">
@@ -1326,13 +1192,6 @@ textarea{
         >
 
         <input
-          type="hidden"
-          id="publicOrganizerId"
-          name="Veranstalter-ID"
-          value=""
-        >
-
-        <input
           type="text"
           name="_honey"
           value=""
@@ -1343,24 +1202,7 @@ textarea{
 
         <div class="form-grid">
 
-          <div class="form-group full">
-
-            <label for="publicUsername">
-              Anmeldename <span class="public-required">*</span>
-            </label>
-
-            <input
-              id="publicUsername"
-              name="Anmeldename"
-              required
-              readonly
-              placeholder="wird nach dem Login übernommen"
-            >
-
-          </div>
-
-
-          <div class="form-group full">
+          <div class="form-group">
 
             <label for="publicName">
               Name / Veranstalter <span class="public-required">*</span>
@@ -1371,6 +1213,22 @@ textarea{
               name="Veranstalter"
               required
               placeholder="z. B. Feuerwehr Heimburg"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicCreator">
+              Name des Erstellers <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="publicCreator"
+              name="Ersteller"
+              required
+              placeholder="z. B. Max Mustermann"
             >
 
           </div>
@@ -1412,7 +1270,7 @@ textarea{
           <div class="form-group">
 
             <label for="publicDate">
-              Von Datum <span class="public-required">*</span>
+              Datum <span class="public-required">*</span>
             </label>
 
             <input
@@ -1428,14 +1286,13 @@ textarea{
           <div class="form-group">
 
             <label for="publicEndDate">
-              Bis Datum <span class="optional-label">(optional)</span>
+              Datum bis (optional)
             </label>
 
             <input
               id="publicEndDate"
-              name="Enddatum"
+              name="Datum_bis"
               type="date"
-              onchange="validateDateRange('publicDate','publicEndDate')"
             >
 
           </div>
@@ -1495,21 +1352,6 @@ textarea{
 
           <div class="form-group full">
 
-            <label for="publicDescription">
-              Beschreibung
-            </label>
-
-            <textarea
-              id="publicDescription"
-              name="Beschreibung"
-              placeholder="Weitere Informationen zur Veranstaltung …"
-            ></textarea>
-
-          </div>
-
-
-          <div class="form-group full">
-
             <label for="publicImage">
               Veranstaltungsbild
             </label>
@@ -1518,7 +1360,7 @@ textarea{
 
               <input
                 id="publicImage"
-                name="attachment"
+                name="Bild"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
               >
@@ -1528,6 +1370,20 @@ textarea{
             <div class="public-upload-info">
               JPG, PNG, WEBP oder GIF · maximal 10 MB
             </div>
+
+          </div>
+
+          <div class="form-group full">
+
+            <label for="publicDescription">
+              Beschreibung
+            </label>
+
+            <textarea
+              id="publicDescription"
+              name="Beschreibung"
+              placeholder="Weitere Informationen zur Veranstaltung …"
+            ></textarea>
 
           </div>
 
@@ -1704,29 +1560,13 @@ textarea{
           <div class="form-group">
 
             <label for="eventDate">
-              Von Datum *
+              Datum *
             </label>
 
             <input
               id="eventDate"
               type="date"
               required
-              onchange="setEndDateMinimum('eventDate','eventEndDate')"
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="eventEndDate">
-              Bis Datum <span class="optional-label">(optional)</span>
-            </label>
-
-            <input
-              id="eventEndDate"
-              type="date"
-              onchange="validateDateRange('eventDate','eventEndDate')"
             >
 
           </div>
@@ -1954,78 +1794,6 @@ let events =
 let cancellationPending =
   false;
 
-const ORGANIZER_USERS_STORAGE = "veranstaltungskalender_v2_organizer_users";
-const ORGANIZER_SESSION = "veranstaltungskalender_v2_organizer_session";
-
-/*
-  VORBEREITUNG FÜR MAKE:
-  Diese beiden Webhooks werden im nächsten Schritt durch die tatsächlichen
-  Make-Szenarien ersetzt. Bis dahin arbeitet der Zugang als lokale Vorschau
-  in diesem Browser. Es werden keine Passwörter an Dritte übertragen.
-*/
-const MAKE_ORGANIZER_REGISTER_WEBHOOK = "";
-const MAKE_ORGANIZER_LOGIN_WEBHOOK = "";
-
-function getOrganizerUsers(){
-  try{
-    return JSON.parse(localStorage.getItem(ORGANIZER_USERS_STORAGE) || "[]");
-  }catch(e){
-    return [];
-  }
-}
-
-function saveOrganizerUsers(users){
-  localStorage.setItem(ORGANIZER_USERS_STORAGE, JSON.stringify(users));
-}
-
-function getOrganizerSession(){
-  try{
-    return JSON.parse(sessionStorage.getItem(ORGANIZER_SESSION) || "null");
-  }catch(e){
-    return null;
-  }
-}
-
-function setOrganizerSession(user){
-  sessionStorage.setItem(ORGANIZER_SESSION, JSON.stringify({
-    organizerId:user.id,
-    username:user.username,
-    name:user.name,
-    email:user.email
-  }));
-  updateOrganizerStatus();
-}
-
-function clearOrganizerSession(){
-  sessionStorage.removeItem(ORGANIZER_SESSION);
-  updateOrganizerStatus();
-}
-
-async function hashOrganizerPassword(password){
-  const data = new TextEncoder().encode(password);
-  const buffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,"0")).join("");
-}
-
-function organizerIsLoggedIn(){
-  return !!getOrganizerSession();
-}
-
-function updateOrganizerStatus(){
-  const status=document.getElementById("organizerStatus");
-  const text=document.getElementById("organizerStatusText");
-  const session=getOrganizerSession();
-  if(status && text){
-    if(session){
-      text.textContent = "Angemeldet als " + (session.name || session.username);
-      status.classList.add("open");
-    }else{
-      text.textContent = "";
-      status.classList.remove("open");
-    }
-  }
-}
-
 
 /* ---------------------------------
    DEMO-EVENTS
@@ -2234,71 +2002,6 @@ function formatMonth(date){
 }
 
 
-function setEndDateMinimum(startId,endId){
-
-  const start = document.getElementById(startId);
-  const end = document.getElementById(endId);
-
-  if(!start || !end) return;
-
-  end.min = start.value || "";
-
-  if(end.value && start.value && end.value < start.value){
-    end.value = start.value;
-  }
-
-}
-
-
-function validateDateRange(startId,endId){
-
-  const start = document.getElementById(startId);
-  const end = document.getElementById(endId);
-
-  if(!start || !end) return true;
-
-  end.min = start.value || "";
-
-  if(end.value && start.value && end.value < start.value){
-    showToast("Das Enddatum darf nicht vor dem Startdatum liegen.");
-    end.value = "";
-    return false;
-  }
-
-  return true;
-
-}
-
-
-function getEventEndDate(event){
-
-  return event.endDate || event.date;
-
-}
-
-
-function eventIncludesDate(event,iso){
-
-  const start = event.date;
-  const end = getEventEndDate(event);
-
-  return !!start && iso >= start && iso <= end;
-
-}
-
-
-function eventOverlapsMonth(event,year,month){
-
-  const monthStart = new Date(year,month,1);
-  const monthEnd = new Date(year,month + 1,0);
-  const start = new Date(event.date + "T12:00:00");
-  const end = new Date(getEventEndDate(event) + "T12:00:00");
-
-  return start <= monthEnd && end >= monthStart;
-
-}
-
-
 function eventDateTime(event){
 
   return new Date(
@@ -2469,10 +2172,15 @@ function renderCurrentMonthEvents(){
     getFilteredEvents()
       .filter(event => {
 
-        return eventOverlapsMonth(
-          event,
-          year,
-          month
+        const date =
+          new Date(
+            event.date +
+            "T12:00:00"
+          );
+
+        return (
+          date.getFullYear() === year &&
+          date.getMonth() === month
         );
 
       });
@@ -2540,11 +2248,7 @@ function renderEventCard(event){
       <div class="card-body">
 
         <div class="date-badge">
-          ${
-            event.endDate && event.endDate !== event.date
-              ? formatDate(event.date) + " – " + formatDate(event.endDate)
-              : formatDate(event.date)
-          }
+          ${formatDate(event.date)}
         </div>
 
 
@@ -2598,12 +2302,18 @@ function renderEventCard(event){
           </button>
 
 
-          <button
-            class="btn small light"
-            onclick="downloadICal('${event.id}')"
-          >
-            📅 In Kalender eintragen
-          </button>
+          ${
+            !event.cancelled
+              ? `
+                <button
+                  class="btn small light"
+                  onclick="downloadICal('${event.id}')"
+                >
+                  📅 In Kalender eintragen
+                </button>
+              `
+              : ""
+          }
 
         </div>
 
@@ -2806,7 +2516,7 @@ function renderSingleCalendar(
     const dayEvents =
       events.filter(
         event =>
-          eventIncludesDate(event,iso)
+          event.date === iso
       );
 
 
@@ -3164,11 +2874,7 @@ function openDetail(id){
           Datum
         </strong>
 
-        ${
-          event.endDate && event.endDate !== event.date
-            ? formatDateLong(event.date) + " – " + formatDateLong(event.endDate)
-            : formatDateLong(event.date)
-        }
+        ${formatDateLong(event.date)}
 
       </div>
 
@@ -3354,151 +3060,61 @@ function closeModal(id){
    ÖFFENTLICHE VERANSTALTUNGSANMELDUNG
 --------------------------------- */
 
-function openOrganizerAccess(){
-  if(organizerIsLoggedIn()){
-    openPublicRegistrationForm();
-    return;
-  }
-  showOrganizerLogin();
-  document.getElementById("organizerAccessModal").classList.add("open");
-}
-
-function showOrganizerLogin(){
-  document.getElementById("organizerLoginPanel").style.display="block";
-  document.getElementById("organizerRegistrationPanel").style.display="none";
-  document.getElementById("loginTabButton").classList.add("active");
-  document.getElementById("loginTabButton").classList.remove("light");
-  document.getElementById("registerTabButton").classList.remove("active");
-  document.getElementById("registerTabButton").classList.add("light");
-}
-
-function showOrganizerRegistration(){
-  document.getElementById("organizerLoginPanel").style.display="none";
-  document.getElementById("organizerRegistrationPanel").style.display="block";
-  document.getElementById("registerTabButton").classList.add("active");
-  document.getElementById("registerTabButton").classList.remove("light");
-  document.getElementById("loginTabButton").classList.remove("active");
-  document.getElementById("loginTabButton").classList.add("light");
-}
-
-async function registerOrganizer(event){
-  event.preventDefault();
-
-  const username=document.getElementById("organizerRegisterUsername").value.trim();
-  const name=document.getElementById("organizerRegisterName").value.trim();
-  const email=document.getElementById("organizerRegisterEmail").value.trim();
-  const password=document.getElementById("organizerRegisterPassword").value;
-  const password2=document.getElementById("organizerRegisterPassword2").value;
-
-  if(password !== password2){
-    showToast("Die Passwörter stimmen nicht überein.");
-    return;
-  }
-  if(password.length < 8){
-    showToast("Das Passwort muss mindestens 8 Zeichen lang sein.");
-    return;
-  }
-
-  const users=getOrganizerUsers();
-  if(users.some(u=>u.username.toLowerCase()===username.toLowerCase())){
-    showToast("Dieser Anmeldename ist bereits vergeben.");
-    return;
-  }
-
-  const user={
-    id:"org-"+Date.now()+"-"+Math.random().toString(36).slice(2,8),
-    username, name, email,
-    passwordHash:await hashOrganizerPassword(password),
-    createdAt:new Date().toISOString()
-  };
-
-  users.push(user);
-  saveOrganizerUsers(users);
-  setOrganizerSession(user);
-
-  if(MAKE_ORGANIZER_REGISTER_WEBHOOK){
-    /* Wird mit Make verbunden, sobald der Registrierungs-Webhook eingerichtet ist. */
-  }
-
-  closeModal("organizerAccessModal");
-  showToast("Konto angelegt. Sie sind jetzt angemeldet.");
-  openPublicRegistrationForm();
-}
-
-async function loginOrganizer(event){
-  event.preventDefault();
-
-  const username=document.getElementById("organizerLoginUsername").value.trim();
-  const password=document.getElementById("organizerLoginPassword").value;
-  const users=getOrganizerUsers();
-  const user=users.find(u=>u.username.toLowerCase()===username.toLowerCase());
-
-  if(!user){
-    showToast("Anmeldename oder Passwort ist falsch.");
-    return;
-  }
-
-  const hash=await hashOrganizerPassword(password);
-  if(hash!==user.passwordHash){
-    showToast("Anmeldename oder Passwort ist falsch.");
-    return;
-  }
-
-  setOrganizerSession(user);
-  closeModal("organizerAccessModal");
-  showToast("Erfolgreich angemeldet.");
-}
-
-function logoutOrganizer(){
-  clearOrganizerSession();
-  closeModal("publicRegistrationModal");
-  showToast("Sie wurden als Veranstalter abgemeldet.");
-}
-
 function openPublicRegistration(){
-  if(!organizerIsLoggedIn()){
-    openOrganizerAccess();
-    return;
-  }
-  openPublicRegistrationForm();
-}
 
-function openPublicRegistrationForm(){
-  const form=document.getElementById("publicRegistrationForm");
-  const session=getOrganizerSession();
-  if(!session){
-    openOrganizerAccess();
-    return;
-  }
-  if(form) form.reset();
-  document.getElementById("publicUsername").value=session.username || "";
-  document.getElementById("publicName").value=session.name || "";
-  document.getElementById("publicEmail").value=session.email || "";
-  document.getElementById("publicRegistrationModal").classList.add("open");
+  const form=
+    document.getElementById(
+      "publicRegistrationForm"
+    );
+
+  if(form)
+    form.reset();
+
+  document
+    .getElementById(
+      "publicRegistrationModal"
+    )
+    .classList.add("open");
+
 }
 
 
 function validatePublicRegistration(){
 
-  if(!validateDateRange("publicDate","publicEndDate")){
-    return false;
-  }
-
-  const fileInput = document.getElementById("publicImage");
+  const fileInput =
+    document.getElementById("publicImage");
 
   if(fileInput && fileInput.files.length){
+
     const file = fileInput.files[0];
-    const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
+
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif"
+    ];
 
     if(!allowed.includes(file.type)){
-      showToast("Bitte nur JPG, PNG, WEBP oder GIF hochladen.");
+
+      showToast(
+        "Bitte nur JPG, PNG, WEBP oder GIF hochladen."
+      );
+
       return false;
+
     }
 
     if(file.size > 10 * 1024 * 1024){
-      showToast("Das Bild darf maximal 10 MB groß sein.");
+
+      showToast(
+        "Das Bild darf maximal 10 MB groß sein."
+      );
+
       return false;
+
     }
+
   }
 
   return true;
@@ -3508,17 +3124,6 @@ function validatePublicRegistration(){
 function submitPublicRegistration(event){
 
   event.preventDefault();
-
-  const session=getOrganizerSession();
-  if(!session){
-    showToast("Bitte melden Sie sich zuerst als Veranstalter an.");
-    closeModal("publicRegistrationModal");
-    openOrganizerAccess();
-    return false;
-  }
-
-  document.getElementById("publicUsername").value=session.username || "";
-  document.getElementById("publicOrganizerId").value=session.organizerId || "";
 
   if(!validatePublicRegistration()) return false;
 
@@ -3766,13 +3371,6 @@ function openAdminEdit(id){
   ).value =
     event.date || "";
 
-  document.getElementById(
-    "eventEndDate"
-  ).value =
-    event.endDate || "";
-
-  setEndDateMinimum("eventDate","eventEndDate");
-
 
   document.getElementById(
     "eventStart"
@@ -3887,11 +3485,6 @@ async function saveEvent(eventSubmit){
   }
 
 
-  if(!validateDateRange("eventDate","eventEndDate")){
-    return;
-  }
-
-
   const id =
     document.getElementById(
       "eventId"
@@ -3952,11 +3545,6 @@ async function saveEvent(eventSubmit){
       document.getElementById(
         "eventDate"
       ).value,
-
-    endDate:
-      document.getElementById(
-        "eventEndDate"
-      ).value || "",
 
     start:
       document.getElementById(
@@ -4524,7 +4112,7 @@ function downloadICal(id){
 
     "DTEND;TZID=Europe/Berlin:" +
       icalDateTime(
-        getEventEndDate(event),
+        event.date,
         end
       ),
 
@@ -4687,7 +4275,6 @@ document
 --------------------------------- */
 
 loadEvents();
-updateOrganizerStatus();
 
 </script>
 
