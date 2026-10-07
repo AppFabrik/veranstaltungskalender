@@ -1,0 +1,4282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veranstaltungskalender</title>
+
+<style>
+:root{
+  --bg:#eef7f5;
+  --paper:#ffffff;
+  --paper2:#f3fbfa;
+  --ink:#173d3d;
+  --muted:#658282;
+  --accent:#168f86;
+  --accent-dark:#0d6f69;
+  --gold:#f2b34d;
+  --line:#d7e8e5;
+  --danger:#b52b43;
+  --danger-bg:#fff0f3;
+  --shadow:0 12px 35px rgba(23,61,61,.10);
+  --radius:22px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(22,143,134,.13),transparent 28%),
+    radial-gradient(circle at 92% 12%,rgba(242,179,77,.14),transparent 24%),
+    var(--bg);
+  color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+a{
+  color:var(--accent);
+}
+
+.container{
+  width:min(1200px,calc(100% - 32px));
+  margin:auto;
+}
+
+/* HEADER */
+
+.site-header{
+  padding:32px 0 24px;
+}
+
+.hero{
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(135deg,#0d6f69 0%,#168f86 48%,#6674d8 100%);
+  color:white;
+  border-radius:28px;
+  padding:32px 38px;
+  box-shadow:var(--shadow);
+}
+
+.hero:after{
+  content:"";
+  position:absolute;
+  width:330px;
+  height:330px;
+  border-radius:50%;
+  right:-110px;
+  top:-120px;
+  background:rgba(255,255,255,.08);
+}
+
+.hero small{
+  position:relative;
+  z-index:1;
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  font:700 12px Arial,sans-serif;
+  opacity:.8;
+}
+
+.hero h1{
+  position:relative;
+  z-index:1;
+  margin:8px 0 12px;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  font-size:clamp(30px,4.5vw,54px);
+  line-height:1;
+  font-weight:800;
+}
+
+.hero-title{
+  display:flex;
+  align-items:center;
+  gap:13px
+}
+
+.hero-logo{
+  flex:0 0 auto;
+  width:42px;
+  height:42px;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.18))
+}
+
+.hero-logo .reel{
+  animation:reelSpin 9s linear infinite;
+  transform-origin:50% 50%
+}
+
+.hero-logo .spark{
+  animation:cinemaSpark 2.2s ease-in-out infinite
+}
+
+@keyframes reelSpin{
+  to{
+    transform:rotate(360deg)
+  }
+}
+
+@keyframes cinemaSpark{
+  0%,100%{
+    opacity:.55;
+    transform:scale(.9)
+  }
+  50%{
+    opacity:1;
+    transform:scale(1.12)
+  }
+}
+
+.hero p{
+  position:relative;
+  z-index:1;
+  max-width:700px;
+  margin:0;
+  font:17px/1.6 Arial,sans-serif;
+  opacity:.9;
+}
+
+.hero-actions{
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:26px;
+}
+
+/* BUTTONS */
+
+.btn{
+  border:0;
+  border-radius:12px;
+  padding:11px 16px;
+  background:var(--accent);
+  color:white;
+  font:700 14px Arial,sans-serif;
+  transition:.2s;
+}
+
+.btn:hover{
+  background:var(--accent-dark);
+  transform:translateY(-1px);
+}
+
+.btn.secondary{
+  background:#fff;
+  color:var(--accent-dark);
+}
+
+.btn.light{
+  background:#eee3d6;
+  color:var(--ink);
+}
+
+.btn.danger{
+  background:var(--danger);
+}
+
+.btn.danger:hover{
+  background:#741313;
+}
+
+.btn.small{
+  padding:8px 11px;
+  font-size:12px;
+}
+
+/* CONTROLS */
+
+.controls{
+  margin:22px 0;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px;
+  box-shadow:var(--shadow);
+}
+
+.controls-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr auto auto;
+  gap:10px;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--ink);
+  padding:11px 12px;
+  outline:none;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(155,93,56,.10);
+}
+
+textarea{
+  min-height:120px;
+  resize:vertical;
+}
+
+/* CALENDAR */
+
+.calendar-box{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin-bottom:24px;
+}
+
+.calendar-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.calendar-title{
+  font-size:25px;
+  font-weight:700;
+}
+
+.calendar-nav{
+  display:flex;
+  gap:7px;
+}
+
+.calendar-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  border-top:1px solid var(--line);
+  border-left:1px solid var(--line);
+}
+
+.weekday{
+  padding:10px 6px;
+  text-align:center;
+  background:var(--paper2);
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  font:700 12px Arial,sans-serif;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.day{
+  min-height:132px;
+  padding:7px;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  background:#fffdfa;
+}
+
+.day.other-month{
+  background:#f6f1e9;
+  color:#aaa;
+}
+
+.day.today{
+  box-shadow:inset 0 0 0 3px rgba(155,93,56,.35);
+}
+
+.day-number{
+  font:700 12px Arial,sans-serif;
+  color:var(--muted);
+  margin-bottom:5px;
+}
+
+.event-chip{
+  position:relative;
+  overflow:hidden;
+  margin-bottom:6px;
+  border-radius:9px;
+  background:#eee2d5;
+  cursor:pointer;
+  box-shadow:0 2px 7px rgba(0,0,0,.08);
+}
+
+.event-chip img{
+  display:block;
+  width:100%;
+  height:48px;
+  object-fit:cover;
+}
+
+.event-chip-content{
+  padding:5px 6px 7px;
+}
+
+.event-chip-title{
+  font:700 11px/1.2 Arial,sans-serif;
+}
+
+.event-chip-time{
+  margin-top:3px;
+  font:10px Arial,sans-serif;
+  color:var(--muted);
+}
+
+/* EVENTS */
+
+.events-section{
+  margin-bottom:50px;
+}
+
+.section-title{
+  margin:0 0 15px;
+  font-size:30px;
+}
+
+.event-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+
+.event-card{
+  overflow:hidden;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  transition:.2s;
+}
+
+.event-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 18px 40px rgba(23,61,61,.15);
+}
+
+.event-card.cancelled-card{
+  opacity:.84;
+}
+
+.card-img{
+  position:relative;
+  overflow:hidden;
+}
+
+.card-img img{
+  display:block;
+  width:100%;
+  height:210px;
+  object-fit:cover;
+}
+
+.card-body{
+  padding:18px;
+}
+
+.date-badge{
+  display:inline-block;
+  margin-bottom:9px;
+  padding:6px 9px;
+  border-radius:8px;
+  background:#eee2d5;
+  color:var(--accent-dark);
+  font:800 11px Arial,sans-serif;
+  text-transform:uppercase;
+}
+
+.event-card h3{
+  margin:0 0 9px;
+  font-size:22px;
+  line-height:1.15;
+}
+
+.event-meta{
+  color:var(--muted);
+  font:13px/1.6 Arial,sans-serif;
+}
+
+.event-description{
+  margin:13px 0 16px;
+  font:14px/1.6 Arial,sans-serif;
+}
+
+.card-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+/* CANCELLED */
+
+.cancelled-wrap{
+  position:relative;
+  overflow:hidden;
+}
+
+.cancelled-banner{
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:145%;
+  transform:translate(-50%,-50%) rotate(-24deg);
+  background:var(--danger);
+  color:white;
+  text-align:center;
+  font:900 21px Arial,sans-serif;
+  letter-spacing:.16em;
+  padding:10px 0;
+  box-shadow:0 5px 15px rgba(0,0,0,.35);
+  z-index:5;
+  pointer-events:none;
+}
+
+.cancelled-banner.small{
+  font-size:11px;
+  padding:6px 0;
+  letter-spacing:.12em;
+}
+
+.cancelled-info{
+  margin-top:18px;
+  padding:15px 16px;
+  border-left:5px solid var(--danger);
+  background:var(--danger-bg);
+  border-radius:10px;
+}
+
+.cancelled-info strong{
+  display:block;
+  color:var(--danger);
+  font:900 13px Arial,sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:6px;
+}
+
+.cancelled-info p{
+  margin:0;
+  color:#5c4444;
+  font:14px/1.55 Arial,sans-serif;
+}
+
+/* EMPTY */
+
+.empty{
+  padding:45px 20px;
+  text-align:center;
+  background:var(--paper);
+  border:1px dashed var(--line);
+  border-radius:var(--radius);
+  color:var(--muted);
+}
+
+/* MODAL */
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(45,31,23,.62);
+}
+
+.modal-backdrop.open{
+  display:flex;
+}
+
+.modal{
+  width:min(720px,100%);
+  max-height:92vh;
+  overflow:auto;
+  background:var(--paper);
+  border-radius:22px;
+  box-shadow:0 30px 80px rgba(0,0,0,.3);
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  padding:20px 22px;
+  border-bottom:1px solid var(--line);
+}
+
+.modal-header h2{
+  margin:0;
+  font-size:26px;
+}
+
+.close{
+  border:0;
+  background:#eee3d6;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  font-size:22px;
+}
+
+.modal-body{
+  padding:22px;
+}
+
+.detail-image-wrap{
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  margin-bottom:18px;
+}
+
+.detail-image{
+  display:block;
+  width:100%;
+  max-height:360px;
+  object-fit:cover;
+}
+
+.detail-meta{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin:16px 0;
+}
+
+.detail-meta div{
+  background:var(--paper2);
+  padding:12px;
+  border-radius:10px;
+  font:13px/1.45 Arial,sans-serif;
+}
+
+.detail-meta strong{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  margin-bottom:3px;
+}
+
+.detail-description{
+  font:15px/1.7 Arial,sans-serif;
+  white-space:pre-line;
+}
+
+.modal-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:20px;
+}
+
+/* FORM */
+
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:13px;
+}
+
+.form-group{
+  margin-bottom:14px;
+}
+
+.form-group.full{
+  grid-column:1/-1;
+}
+
+.form-group label{
+  display:block;
+  margin-bottom:5px;
+  font:700 12px Arial,sans-serif;
+  color:var(--muted);
+}
+
+.admin-status{
+  padding:12px 14px;
+  background:#eee2d5;
+  border-radius:10px;
+  margin-bottom:15px;
+  font:13px/1.5 Arial,sans-serif;
+}
+
+.cancel-panel{
+  display:none;
+  margin-top:14px;
+  padding:15px;
+  border:1px solid #dfbcbc;
+  background:var(--danger-bg);
+  border-radius:12px;
+}
+
+.cancel-panel.open{
+  display:block;
+}
+
+.cancel-panel label{
+  color:var(--danger);
+}
+
+.admin-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:18px;
+}
+
+/* ÖFFENTLICHE VERANSTALTUNGSANMELDUNG */
+
+.public-upload{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px;
+  border:1px dashed var(--line);
+  border-radius:12px;
+  background:var(--paper2)
+}
+
+.public-upload input[type="file"]{
+  padding:8px;
+  background:#fff
+}
+
+.public-upload-info{
+  margin-top:6px;
+  color:var(--muted);
+  font:12px/1.45 Arial,sans-serif
+}
+
+.public-required{
+  color:var(--danger)
+}
+
+/* TOAST */
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:20px;
+  z-index:3000;
+  transform:translate(-50%,20px);
+  opacity:0;
+  pointer-events:none;
+  background:#3d3028;
+  color:white;
+  padding:12px 17px;
+  border-radius:10px;
+  font:13px Arial,sans-serif;
+  transition:.25s;
+}
+
+.toast.show{
+  transform:translate(-50%,0);
+  opacity:1;
+}
+
+/* MONATSANSICHTEN */
+
+.current-events{
+  margin-bottom:24px
+}
+
+.next-calendar{
+  position:relative
+}
+
+.next-month-label{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:5px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#e7f1ef;
+  color:var(--accent-dark);
+  font:800 11px Arial,sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.08em
+}
+
+.next-calendar .day{
+  min-height:105px
+}
+
+.month-picker{
+  margin-bottom:24px
+}
+
+.month-picker-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  gap:10px;
+  align-items:end
+}
+
+.month-picker-grid label{
+  display:block;
+  margin-bottom:5px;
+  color:var(--muted);
+  font:700 11px Arial,sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.06em
+}
+
+.picker-calendar{
+  margin-top:16px
+}
+
+.picker-calendar[hidden]{
+  display:none
+}
+
+.section-kicker{
+  color:var(--accent);
+  font:800 12px Arial,sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  margin-bottom:4px
+}
+
+@media(max-width:650px){
+  .hero{
+    padding:24px 20px
+  }
+
+  .hero-title{
+    gap:9px
+  }
+
+  .hero-logo{
+    width:32px;
+    height:32px
+  }
+
+  .month-picker-grid{
+    grid-template-columns:1fr 1fr
+  }
+
+  .month-picker-grid .btn{
+    grid-column:1/-1
+  }
+}
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+  .event-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .controls-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:650px){
+  .container{
+    width:min(100% - 18px,1200px);
+  }
+
+  .hero{
+    padding:28px 22px;
+    border-radius:20px;
+  }
+
+  .calendar-box{
+    padding:9px;
+  }
+
+  .day{
+    min-height:90px;
+    padding:4px;
+  }
+
+  .event-chip img{
+    height:35px;
+  }
+
+  .event-chip-content{
+    padding:4px;
+  }
+
+  .event-chip-title{
+    font-size:9px;
+  }
+
+  .event-chip-time{
+    font-size:8px;
+  }
+
+  .event-grid{
+    grid-template-columns:1fr;
+  }
+
+  .controls-grid{
+    grid-template-columns:1fr;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .form-group.full{
+    grid-column:auto;
+  }
+
+  .detail-meta{
+    grid-template-columns:1fr;
+  }
+
+  .calendar-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .weekday{
+    font-size:9px;
+  }
+
+  .cancelled-banner{
+    font-size:16px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <header class="site-header">
+    <section class="hero">
+      <small>Veranstaltungen & Termine</small>
+
+      <h1 class="hero-title">
+        <svg class="hero-logo" viewBox="0 0 64 64" aria-label="Cinema Kalender Logo" role="img">
+          <g class="reel" fill="none" stroke="white" stroke-width="4">
+            <circle cx="32" cy="32" r="23"/>
+            <circle cx="32" cy="32" r="5" fill="white"/>
+            <circle cx="32" cy="17" r="5" fill="white" stroke="none"/>
+            <circle cx="45" cy="25" r="5" fill="white" stroke="none"/>
+            <circle cx="43" cy="40" r="5" fill="white" stroke="none"/>
+            <circle cx="21" cy="40" r="5" fill="white" stroke="none"/>
+            <circle cx="19" cy="25" r="5" fill="white" stroke="none"/>
+          </g>
+
+          <path
+            d="M10 51 L54 51"
+            stroke="#f2b34d"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+
+          <path
+            class="spark"
+            d="M52 8v9M47.5 12.5h9"
+            stroke="#f2b34d"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
+
+          <path
+            d="M27 28 L27 36 L39 32 Z"
+            fill="#e86c79"
+          />
+        </svg>
+
+        Was ist los?
+      </h1>
+
+      <p>
+        Veranstaltungen, Feste, Konzerte, Sport und vieles mehr –
+        übersichtlich auf einen Blick.
+      </p>
+
+      <div class="hero-actions">
+
+        <button
+          class="btn secondary"
+          onclick="openPublicRegistration()"
+        >
+          Veranstaltung anmelden
+        </button>
+
+        <button class="btn secondary" onclick="openAdminLogin()">
+          🔒 Verwaltung
+        </button>
+
+      </div>
+    </section>
+  </header>
+
+
+  <section class="controls">
+
+    <div class="controls-grid">
+
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Veranstaltung suchen …"
+        oninput="renderAll()"
+      >
+
+      <select
+        id="categoryFilter"
+        onchange="renderAll()"
+      >
+        <option value="">Alle Kategorien</option>
+        <option value="Kultur">Kultur</option>
+        <option value="Sport">Sport</option>
+        <option value="Feste & Feiern">Feste & Feiern</option>
+        <option value="Musik">Musik</option>
+        <option value="Verein">Verein</option>
+        <option value="Sonstiges">Sonstiges</option>
+      </select>
+
+      <button
+        class="btn"
+        onclick="goCurrentMonth()"
+      >
+        Aktueller Monat
+      </button>
+
+      <button
+        class="btn light"
+        onclick="resetFilters()"
+      >
+        Zurücksetzen
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- AKTUELLER MONAT -->
+
+  <section class="events-section current-events">
+
+    <div class="section-kicker">
+      Jetzt aktuell
+    </div>
+
+    <h2
+      class="section-title"
+      id="currentEventsTitle"
+    >
+      Veranstaltungen im Oktober 2026
+    </h2>
+
+    <div
+      class="event-grid"
+      id="currentEventGrid"
+    ></div>
+
+  </section>
+
+
+  <!-- FOLGEMONAT -->
+
+  <section class="calendar-box next-calendar">
+
+    <div class="calendar-head">
+
+      <div>
+
+        <div
+          class="calendar-title"
+          id="nextCalendarTitle"
+        >
+          November 2026
+        </div>
+
+        <div class="next-month-label">
+          Nächster Monat
+        </div>
+
+      </div>
+
+    </div>
+
+    <div
+      class="calendar-grid"
+      id="nextCalendarGrid"
+    ></div>
+
+  </section>
+
+
+  <!-- BELIEBIGER MONAT -->
+
+  <section class="calendar-box month-picker">
+
+    <div class="calendar-head">
+
+      <div>
+
+        <div class="section-kicker">
+          Weitere Monate
+        </div>
+
+        <div class="calendar-title">
+          Kalender auswählen
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="month-picker-grid">
+
+      <div>
+
+        <label for="pickerMonth">
+          Monat
+        </label>
+
+        <select id="pickerMonth"></select>
+
+      </div>
+
+
+      <div>
+
+        <label for="pickerYear">
+          Jahr
+        </label>
+
+        <select id="pickerYear"></select>
+
+      </div>
+
+
+      <button
+        class="btn"
+        onclick="showPickedMonth()"
+      >
+        Monat anzeigen
+      </button>
+
+    </div>
+
+
+    <div
+      class="calendar-box picker-calendar"
+      id="pickerCalendarBox"
+      hidden
+    >
+
+      <div class="calendar-head">
+
+        <div
+          class="calendar-title"
+          id="pickerCalendarTitle"
+        ></div>
+
+      </div>
+
+      <div
+        class="calendar-grid"
+        id="pickerCalendarGrid"
+      ></div>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+<!-- DETAIL MODAL -->
+
+<div
+  class="modal-backdrop"
+  id="detailModal"
+>
+
+  <div class="modal">
+
+    <div class="modal-header">
+
+      <h2 id="detailTitle">
+        Veranstaltung
+      </h2>
+
+      <button
+        class="close"
+        onclick="closeModal('detailModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div
+      class="modal-body"
+      id="detailBody"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- ÖFFENTLICHE VERANSTALTUNGSANMELDUNG -->
+
+<div class="modal-backdrop" id="publicRegistrationModal">
+
+  <div class="modal">
+
+    <div class="modal-header">
+
+      <h2>
+        Veranstaltung anmelden
+      </h2>
+
+      <button
+        type="button"
+        class="close"
+        onclick="closeModal('publicRegistrationModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <div class="admin-status">
+        📝 Sie möchten eine Veranstaltung eintragen? Füllen Sie bitte die folgenden Felder aus. Ihre Anmeldung wird anschließend an uns übermittelt und geprüft.
+      </div>
+
+      <form
+        id="publicRegistrationForm"
+        action="https://hook.eu1.make.com/0geuyiem2dtji2jt5bwjrelov3aln3lr"
+        method="POST"
+        enctype="multipart/form-data"
+        target="makeWebhookFrame"
+        onsubmit="return submitPublicRegistration(event)"
+      >
+
+        <input
+          type="hidden"
+          name="Anmeldungstyp"
+          value="Veranstalter"
+        >
+
+        <input
+          type="text"
+          name="_honey"
+          value=""
+          style="display:none"
+          tabindex="-1"
+          autocomplete="off"
+        >
+
+        <div class="form-grid">
+
+          <div class="form-group">
+
+            <label for="publicName">
+              Name / Veranstalter <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="publicName"
+              name="Veranstalter"
+              required
+              placeholder="z. B. Feuerwehr Heimburg"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicCreator">
+              Name des Erstellers <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="publicCreator"
+              name="Ersteller"
+              required
+              placeholder="z. B. Max Mustermann"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicEmail">
+              E-Mail-Adresse <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="publicEmail"
+              name="email"
+              type="email"
+              required
+              placeholder="ihre@email.de"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicTitle">
+              Titel <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="publicTitle"
+              name="Titel"
+              required
+              placeholder="z. B. Dorffest Heimburg"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicDate">
+              Datum <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="publicDate"
+              name="Datum"
+              type="date"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicEndDate">
+              Datum bis (optional)
+            </label>
+
+            <input
+              id="publicEndDate"
+              name="Datum_bis"
+              type="date"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicCategory">
+              Kategorie
+            </label>
+
+            <select
+              id="publicCategory"
+              name="Kategorie"
+            >
+              <option value="Kultur">Kultur</option>
+              <option value="Sport">Sport</option>
+              <option value="Feste & Feiern">Feste & Feiern</option>
+              <option value="Musik">Musik</option>
+              <option value="Verein">Verein</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicStart">
+              Beginn <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="publicStart"
+              name="Beginn"
+              type="time"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="publicEnd">
+              Ende
+            </label>
+
+            <input
+              id="publicEnd"
+              name="Ende"
+              type="time"
+            >
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="publicImage">
+              Veranstaltungsbild
+            </label>
+
+            <div class="public-upload">
+
+              <input
+                id="publicImage"
+                name="Bild"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+              >
+
+            </div>
+
+            <div class="public-upload-info">
+              JPG, PNG, WEBP oder GIF · maximal 10 MB
+            </div>
+
+          </div>
+
+          <div class="form-group full">
+
+            <label for="publicDescription">
+              Beschreibung
+            </label>
+
+            <textarea
+              id="publicDescription"
+              name="Beschreibung"
+              placeholder="Weitere Informationen zur Veranstaltung …"
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="publicWebsite">
+              Website / weitere Informationen
+            </label>
+
+            <input
+              id="publicWebsite"
+              name="Website"
+              type="url"
+              placeholder="https://..."
+            >
+
+          </div>
+
+        </div>
+
+
+        <div class="admin-actions">
+
+          <button
+            type="submit"
+            class="btn"
+          >
+            📩 Veranstaltung anmelden
+          </button>
+
+          <button
+            type="button"
+            class="btn light"
+            onclick="closeModal('publicRegistrationModal')"
+          >
+            Abbrechen
+          </button>
+
+        </div>
+
+      </form>
+
+      <iframe name="makeWebhookFrame" id="makeWebhookFrame" title="Formularübertragung" style="display:none;width:0;height:0;border:0"></iframe>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ADMIN LOGIN -->
+
+<div
+  class="modal-backdrop"
+  id="loginModal"
+>
+
+  <div class="modal">
+
+    <div class="modal-header">
+
+      <h2>
+        Verwaltung
+      </h2>
+
+      <button
+        class="close"
+        onclick="closeModal('loginModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <p>
+        Der Verwaltungsbereich ist nur für den Administrator
+        zugänglich.
+      </p>
+
+      <div class="form-group">
+
+        <label for="adminCode">
+          Zugangscode
+        </label>
+
+        <input
+          id="adminCode"
+          type="password"
+          autocomplete="off"
+          placeholder="Zugangscode eingeben"
+          onkeydown="if(event.key==='Enter')loginAdmin()"
+        >
+
+      </div>
+
+      <button
+        class="btn"
+        onclick="loginAdmin()"
+      >
+        Einloggen
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ADMIN MODAL -->
+
+<div
+  class="modal-backdrop"
+  id="adminModal"
+>
+
+  <div class="modal">
+
+    <div class="modal-header">
+
+      <h2 id="adminTitle">
+        Veranstaltung verwalten
+      </h2>
+
+      <button
+        class="close"
+        onclick="closeModal('adminModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <div class="admin-status">
+        🔒 Sie befinden sich im Verwaltungsbereich.
+        Änderungen werden lokal in diesem Browser gespeichert.
+      </div>
+
+
+      <form
+        id="eventForm"
+        onsubmit="saveEvent(event)"
+      >
+
+        <input
+          type="hidden"
+          id="eventId"
+        >
+
+
+        <div class="form-grid">
+
+          <div class="form-group full">
+
+            <label for="eventTitle">
+              Titel *
+            </label>
+
+            <input
+              id="eventTitle"
+              required
+              placeholder="z. B. Dorffest Heimburg"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="eventDate">
+              Datum *
+            </label>
+
+            <input
+              id="eventDate"
+              type="date"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="eventCategory">
+              Kategorie
+            </label>
+
+            <select id="eventCategory">
+              <option value="Kultur">Kultur</option>
+              <option value="Sport">Sport</option>
+              <option value="Feste & Feiern">Feste & Feiern</option>
+              <option value="Musik">Musik</option>
+              <option value="Verein">Verein</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="eventStart">
+              Beginn *
+            </label>
+
+            <input
+              id="eventStart"
+              type="time"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="eventEnd">
+              Ende
+            </label>
+
+            <input
+              id="eventEnd"
+              type="time"
+            >
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="eventLocation">
+              Veranstaltungsort *
+            </label>
+
+            <input
+              id="eventLocation"
+              required
+              placeholder="z. B. Festplatz Heimburg"
+            >
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="eventDescription">
+              Beschreibung
+            </label>
+
+            <textarea
+              id="eventDescription"
+              placeholder="Weitere Informationen zur Veranstaltung …"
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="eventImage">
+              Veranstaltungsbild *
+            </label>
+
+            <div class="public-upload">
+              <input
+                id="eventImage"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+              >
+            </div>
+
+            <div class="public-upload-info">
+              Bild direkt vom Rechner auswählen · JPG, PNG, WEBP oder GIF · maximal 10 MB
+            </div>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="eventWebsite">
+              Website / weitere Informationen
+            </label>
+
+            <input
+              id="eventWebsite"
+              type="url"
+              placeholder="https://..."
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- ABSAGEBEREICH -->
+
+        <div
+          id="cancelPanel"
+          class="cancel-panel"
+        >
+
+          <div class="form-group">
+
+            <label for="cancelReason">
+              Grund der Absage *
+            </label>
+
+            <textarea
+              id="cancelReason"
+              placeholder="Bitte den Grund der Absage eingeben …"
+            ></textarea>
+
+          </div>
+
+          <button
+            type="button"
+            class="btn danger"
+            onclick="confirmCancellation()"
+          >
+            ❌ Absage bestätigen
+          </button>
+
+        </div>
+
+
+        <div class="admin-actions">
+
+          <button
+            type="submit"
+            class="btn"
+          >
+            💾 Veranstaltung speichern
+          </button>
+
+          <button
+            type="button"
+            id="cancelButton"
+            class="btn danger"
+            onclick="showCancellationField()"
+            style="display:none"
+          >
+            ❌ Veranstaltung absagen
+          </button>
+
+          <button
+            type="button"
+            id="uncancelButton"
+            class="btn light"
+            onclick="uncancelEvent()"
+            style="display:none"
+          >
+            ↩️ Absage aufheben
+          </button>
+
+          <button
+            type="button"
+            class="btn light"
+            onclick="logoutAdmin()"
+          >
+            🔓 Abmelden
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div
+  class="toast"
+  id="toast"
+></div>
+
+
+<script>
+
+const STORAGE =
+  "veranstaltungskalender_v2_events";
+
+const ADMIN_SESSION =
+  "veranstaltungskalender_admin_session";
+
+const ADMIN_CODE =
+  "Margid-01";
+
+let currentDate =
+  new Date();
+
+let editingId =
+  null;
+
+let events =
+  [];
+
+let cancellationPending =
+  false;
+
+
+/* ---------------------------------
+   DEMO-EVENTS
+--------------------------------- */
+
+const demoEvents = [
+
+  {
+    id:"demo-1",
+    title:"Herbstmarkt im Ortskern",
+    date:"2026-10-10",
+    start:"10:00",
+    end:"17:00",
+    category:"Feste & Feiern",
+    location:"Ortskern",
+    description:"Bunter Herbstmarkt mit regionalen Ständen, Musik und Angeboten für die ganze Familie.",
+    image:"https://images.unsplash.com/photo-1508779018996-8c0e7c5c6a57?auto=format&fit=crop&w=1200&q=80",
+    website:"",
+    cancelled:false,
+    cancelReason:""
+  },
+
+  {
+    id:"demo-2",
+    title:"Abendkonzert unter freiem Himmel",
+    date:"2026-10-17",
+    start:"19:00",
+    end:"22:00",
+    category:"Musik",
+    location:"Pavillon",
+    description:"Musik und gemütliches Beisammensein unter freiem Himmel.",
+    image:"https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=80",
+    website:"",
+    cancelled:false,
+    cancelReason:""
+  },
+
+  {
+    id:"demo-3",
+    title:"Vereins-Sporttag",
+    date:"2026-10-24",
+    start:"09:30",
+    end:"16:00",
+    category:"Sport",
+    location:"Sportplatz",
+    description:"Sport, Spiel und gemeinsames Miteinander für Jung und Alt.",
+    image:"https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80",
+    website:"",
+    cancelled:false,
+    cancelReason:""
+  },
+
+  {
+    id:"demo-4",
+    title:"Kunstausstellung „Herbstblicke“",
+    date:"2026-10-30",
+    start:"18:00",
+    end:"21:00",
+    category:"Kultur",
+    location:"Gemeindehaus",
+    description:"Ausstellung regionaler Künstlerinnen und Künstler.",
+    image:"https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=1200&q=80",
+    website:"",
+    cancelled:false,
+    cancelReason:""
+  }
+
+];
+
+
+/* ---------------------------------
+   INITIALISIERUNG
+--------------------------------- */
+
+function loadEvents(){
+
+  try{
+
+    const stored =
+      localStorage.getItem(STORAGE);
+
+    if(stored){
+
+      events =
+        JSON.parse(stored);
+
+    }else{
+
+      events =
+        demoEvents;
+
+      saveEvents();
+
+    }
+
+  }catch(error){
+
+    events =
+      demoEvents;
+
+  }
+
+
+  /*
+    Alte Veranstaltungen werden automatisch
+    um die neuen Absage-Felder ergänzt.
+  */
+
+  events =
+    events.map(event => ({
+
+      ...event,
+
+      cancelled:
+        event.cancelled === true,
+
+      cancelReason:
+        event.cancelReason || ""
+
+    }));
+
+
+  saveEvents();
+
+  renderAll();
+
+}
+
+
+function saveEvents(){
+
+  localStorage.setItem(
+    STORAGE,
+    JSON.stringify(events)
+  );
+
+}
+
+
+/* ---------------------------------
+   HILFSFUNKTIONEN
+--------------------------------- */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+function formatDate(dateString){
+
+  const date =
+    new Date(
+      dateString + "T12:00:00"
+    );
+
+  return date.toLocaleDateString(
+    "de-DE",
+    {
+      weekday:"short",
+      day:"2-digit",
+      month:"2-digit",
+      year:"numeric"
+    }
+  );
+
+}
+
+
+function formatDateLong(dateString){
+
+  const date =
+    new Date(
+      dateString + "T12:00:00"
+    );
+
+  return date.toLocaleDateString(
+    "de-DE",
+    {
+      weekday:"long",
+      day:"2-digit",
+      month:"long",
+      year:"numeric"
+    }
+  );
+
+}
+
+
+function formatMonth(date){
+
+  return date.toLocaleDateString(
+    "de-DE",
+    {
+      month:"long",
+      year:"numeric"
+    }
+  );
+
+}
+
+
+function eventDateTime(event){
+
+  return new Date(
+    event.date +
+    "T" +
+    (event.start || "00:00")
+  );
+
+}
+
+
+function isPast(event){
+
+  return eventDateTime(event) <
+    new Date();
+
+}
+
+
+function isAdmin(){
+
+  return sessionStorage.getItem(
+    ADMIN_SESSION
+  ) === "true";
+
+}
+
+
+function showToast(message){
+
+  const toast =
+    document.getElementById("toast");
+
+  toast.textContent =
+    message;
+
+  toast.classList.add("show");
+
+  setTimeout(
+    () =>
+      toast.classList.remove("show"),
+    2500
+  );
+
+}
+
+
+/* ---------------------------------
+   FILTER
+--------------------------------- */
+
+function getFilteredEvents(){
+
+  const search =
+    document
+      .getElementById("searchInput")
+      .value
+      .trim()
+      .toLowerCase();
+
+  const category =
+    document
+      .getElementById("categoryFilter")
+      .value;
+
+
+  return events
+
+    .filter(event => {
+
+      const text = [
+
+        event.title,
+        event.location,
+        event.description,
+        event.category
+
+      ]
+        .join(" ")
+        .toLowerCase();
+
+
+      if(
+        search &&
+        !text.includes(search)
+      ){
+
+        return false;
+
+      }
+
+
+      if(
+        category &&
+        event.category !== category
+      ){
+
+        return false;
+
+      }
+
+
+      return true;
+
+    })
+
+    .sort(
+      (a,b) =>
+        eventDateTime(a) -
+        eventDateTime(b)
+    );
+
+}
+
+
+/* ---------------------------------
+   RENDER ALLES
+--------------------------------- */
+
+function renderAll(){
+
+  ensureMonthPickerOptions();
+
+  renderCurrentMonthEvents();
+
+  renderNextMonthCalendar();
+
+}
+
+
+/* ---------------------------------
+   EVENT CARDS
+--------------------------------- */
+
+function renderCards(){
+
+  renderCurrentMonthEvents();
+
+}
+
+
+function renderCurrentMonthEvents(){
+
+  const grid =
+    document.getElementById(
+      "currentEventGrid"
+    );
+
+  const title =
+    document.getElementById(
+      "currentEventsTitle"
+    );
+
+
+  title.textContent =
+    "Veranstaltungen im " +
+    formatMonth(currentDate);
+
+
+  const year =
+    currentDate.getFullYear();
+
+  const month =
+    currentDate.getMonth();
+
+
+  const filtered =
+    getFilteredEvents()
+      .filter(event => {
+
+        const date =
+          new Date(
+            event.date +
+            "T12:00:00"
+          );
+
+        return (
+          date.getFullYear() === year &&
+          date.getMonth() === month
+        );
+
+      });
+
+
+  if(!filtered.length){
+
+    grid.innerHTML = `
+      <div class="empty">
+        In diesem Monat sind keine
+        Veranstaltungen eingetragen.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  grid.innerHTML =
+    filtered
+      .map(renderEventCard)
+      .join("");
+
+}
+
+
+function renderEventCard(event){
+
+  const cancelledClass =
+    event.cancelled
+      ? " cancelled-card"
+      : "";
+
+
+  return `
+
+    <article
+      class="event-card${cancelledClass}"
+    >
+
+      <div
+        class="card-img cancelled-wrap"
+      >
+
+        <img
+          src="${escapeHTML(event.image)}"
+          alt="${escapeHTML(event.title)}"
+          onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80'"
+        >
+
+        ${
+          event.cancelled
+            ? `
+              <div class="cancelled-banner">
+                ABGESAGT
+              </div>
+            `
+            : ""
+        }
+
+      </div>
+
+
+      <div class="card-body">
+
+        <div class="date-badge">
+          ${formatDate(event.date)}
+        </div>
+
+
+        <h3>
+          ${escapeHTML(event.title)}
+        </h3>
+
+
+        <div class="event-meta">
+
+          🕒
+          ${escapeHTML(event.start || "")}
+
+          ${
+            event.end
+              ? " – " +
+                escapeHTML(event.end)
+              : ""
+          }
+
+          Uhr
+
+          <br>
+
+          📍
+          ${escapeHTML(event.location)}
+
+        </div>
+
+
+        ${
+          event.description
+            ? `
+              <div class="event-description">
+                ${escapeHTML(
+                  event.description
+                )}
+              </div>
+            `
+            : ""
+        }
+
+
+        <div class="card-actions">
+
+          <button
+            class="btn small"
+            onclick="openDetail('${event.id}')"
+          >
+            Details ansehen
+          </button>
+
+
+          ${
+            !event.cancelled
+              ? `
+                <button
+                  class="btn small light"
+                  onclick="downloadICal('${event.id}')"
+                >
+                  📅 In Kalender eintragen
+                </button>
+              `
+              : ""
+          }
+
+        </div>
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+/* ---------------------------------
+   KALENDER
+--------------------------------- */
+
+function renderCalendar(){
+
+  renderNextMonthCalendar();
+
+}
+
+
+function renderNextMonthCalendar(){
+
+  const next =
+    new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      1
+    );
+
+
+  document.getElementById(
+    "nextCalendarTitle"
+  ).textContent =
+    formatMonth(next);
+
+
+  renderSingleCalendar(
+    next,
+    document.getElementById(
+      "nextCalendarGrid"
+    )
+  );
+
+}
+
+
+function renderSingleCalendar(
+  displayDate,
+  grid
+){
+
+  const weekdays = [
+    "Mo",
+    "Di",
+    "Mi",
+    "Do",
+    "Fr",
+    "Sa",
+    "So"
+  ];
+
+
+  let html =
+    weekdays
+      .map(
+        day =>
+          `<div class="weekday">${day}</div>`
+      )
+      .join("");
+
+
+  const year =
+    displayDate.getFullYear();
+
+  const month =
+    displayDate.getMonth();
+
+
+  const first =
+    new Date(
+      year,
+      month,
+      1
+    );
+
+
+  let startDay =
+    first.getDay();
+
+
+  startDay =
+    startDay === 0
+      ? 6
+      : startDay - 1;
+
+
+  const daysInMonth =
+    new Date(
+      year,
+      month + 1,
+      0
+    ).getDate();
+
+
+  const previousDays =
+    new Date(
+      year,
+      month,
+      0
+    ).getDate();
+
+
+  const totalCells =
+    Math.ceil(
+      (startDay + daysInMonth) / 7
+    ) * 7;
+
+
+  for(
+    let i = 0;
+    i < totalCells;
+    i++
+  ){
+
+    const dayOffset =
+      i - startDay + 1;
+
+
+    let cellDate;
+
+    let otherMonth = false;
+
+
+    if(dayOffset < 1){
+
+      cellDate =
+        new Date(
+          year,
+          month - 1,
+          previousDays + dayOffset
+        );
+
+      otherMonth = true;
+
+    }else if(
+      dayOffset > daysInMonth
+    ){
+
+      cellDate =
+        new Date(
+          year,
+          month + 1,
+          dayOffset - daysInMonth
+        );
+
+      otherMonth = true;
+
+    }else{
+
+      cellDate =
+        new Date(
+          year,
+          month,
+          dayOffset
+        );
+
+    }
+
+
+    const iso =
+      cellDate.getFullYear() +
+      "-" +
+      String(
+        cellDate.getMonth() + 1
+      ).padStart(2,"0") +
+      "-" +
+      String(
+        cellDate.getDate()
+      ).padStart(2,"0");
+
+
+    const today =
+      new Date();
+
+
+    const isToday =
+      cellDate.getFullYear() ===
+        today.getFullYear() &&
+
+      cellDate.getMonth() ===
+        today.getMonth() &&
+
+      cellDate.getDate() ===
+        today.getDate();
+
+
+    const dayEvents =
+      events.filter(
+        event =>
+          event.date === iso
+      );
+
+
+    html += `
+
+      <div
+        class="day
+          ${otherMonth ? "other-month" : ""}
+          ${isToday ? "today" : ""}
+        "
+      >
+
+        <div class="day-number">
+          ${cellDate.getDate()}
+        </div>
+
+
+        ${
+          dayEvents
+            .map(
+              event => `
+
+                <div
+                  class="event-chip cancelled-wrap"
+                  onclick="openDetail('${event.id}')"
+                >
+
+                  <img
+                    src="${escapeHTML(event.image)}"
+                    alt=""
+                  >
+
+
+                  ${
+                    event.cancelled
+                      ? `
+                        <div class="cancelled-banner small">
+                          ABGESAGT
+                        </div>
+                      `
+                      : ""
+                  }
+
+
+                  <div class="event-chip-content">
+
+                    <div class="event-chip-title">
+                      ${escapeHTML(event.title)}
+                    </div>
+
+                    <div class="event-chip-time">
+                      ${escapeHTML(
+                        event.start || ""
+                      )}
+                      Uhr
+                    </div>
+
+                  </div>
+
+                </div>
+
+              `
+            )
+            .join("")
+        }
+
+      </div>
+
+    `;
+
+  }
+
+
+  grid.innerHTML =
+    html;
+
+}
+
+
+function ensureMonthPickerOptions(){
+
+  const monthSelect =
+    document.getElementById(
+      "pickerMonth"
+    );
+
+  const yearSelect =
+    document.getElementById(
+      "pickerYear"
+    );
+
+
+  if(
+    !monthSelect ||
+    !yearSelect ||
+    monthSelect.options.length
+  ){
+
+    return;
+
+  }
+
+
+  const months = [
+    "Januar",
+    "Februar",
+    "März",
+    "April",
+    "Mai",
+    "Juni",
+    "Juli",
+    "August",
+    "September",
+    "Oktober",
+    "November",
+    "Dezember"
+  ];
+
+
+  monthSelect.innerHTML =
+    months
+      .map(
+        (month,index) =>
+          `<option value="${index}">
+            ${month}
+          </option>`
+      )
+      .join("");
+
+
+  const now =
+    new Date();
+
+
+  const startYear =
+    now.getFullYear() - 5;
+
+
+  yearSelect.innerHTML =
+    Array
+      .from(
+        {
+          length:16
+        },
+        (_,index) =>
+          startYear + index
+      )
+      .map(
+        year =>
+          `<option value="${year}">
+            ${year}
+          </option>`
+      )
+      .join("");
+
+
+  monthSelect.value =
+    currentDate.getMonth();
+
+
+  yearSelect.value =
+    currentDate.getFullYear();
+
+}
+
+
+function showPickedMonth(){
+
+  const month =
+    Number(
+      document.getElementById(
+        "pickerMonth"
+      ).value
+    );
+
+
+  const year =
+    Number(
+      document.getElementById(
+        "pickerYear"
+      ).value
+    );
+
+
+  const date =
+    new Date(
+      year,
+      month,
+      1
+    );
+
+
+  document.getElementById(
+    "pickerCalendarTitle"
+  ).textContent =
+    formatMonth(date);
+
+
+  document.getElementById(
+    "pickerCalendarBox"
+  ).hidden =
+    false;
+
+
+  renderSingleCalendar(
+    date,
+    document.getElementById(
+      "pickerCalendarGrid"
+    )
+  );
+
+}
+
+
+function changeMonth(amount){
+
+  currentDate =
+    new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + amount,
+      1
+    );
+
+
+  ensureMonthPickerOptions();
+
+
+  document.getElementById(
+    "pickerMonth"
+  ).value =
+    currentDate.getMonth();
+
+
+  document.getElementById(
+    "pickerYear"
+  ).value =
+    currentDate.getFullYear();
+
+
+  renderAll();
+
+}
+
+
+function goToday(){
+
+  currentDate =
+    new Date();
+
+
+  ensureMonthPickerOptions();
+
+
+  document.getElementById(
+    "pickerMonth"
+  ).value =
+    currentDate.getMonth();
+
+
+  document.getElementById(
+    "pickerYear"
+  ).value =
+    currentDate.getFullYear();
+
+
+  renderAll();
+
+}
+
+
+function goCurrentMonth(){
+
+  goToday();
+
+}
+
+
+function resetFilters(){
+
+  document.getElementById(
+    "searchInput"
+  ).value = "";
+
+
+  document.getElementById(
+    "categoryFilter"
+  ).value = "";
+
+
+  renderAll();
+
+}
+
+
+/* ---------------------------------
+   DETAIL
+--------------------------------- */
+
+function openDetail(id){
+
+  const event =
+    events.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!event){
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "detailTitle"
+  ).textContent =
+    event.title;
+
+
+  document.getElementById(
+    "detailBody"
+  ).innerHTML = `
+
+    <div
+      class="detail-image-wrap cancelled-wrap"
+    >
+
+      <img
+        class="detail-image"
+        src="${escapeHTML(event.image)}"
+        alt="${escapeHTML(event.title)}"
+        onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80'"
+      >
+
+
+      ${
+        event.cancelled
+          ? `
+            <div class="cancelled-banner">
+              ABGESAGT
+            </div>
+          `
+          : ""
+      }
+
+    </div>
+
+
+    <div class="detail-meta">
+
+      <div>
+
+        <strong>
+          Datum
+        </strong>
+
+        ${formatDateLong(event.date)}
+
+      </div>
+
+
+      <div>
+
+        <strong>
+          Uhrzeit
+        </strong>
+
+        ${escapeHTML(
+          event.start || ""
+        )}
+
+        ${
+          event.end
+            ? " – " +
+              escapeHTML(event.end)
+            : ""
+        }
+
+        Uhr
+
+      </div>
+
+
+      <div>
+
+        <strong>
+          Ort
+        </strong>
+
+        ${escapeHTML(
+          event.location
+        )}
+
+      </div>
+
+
+      <div>
+
+        <strong>
+          Kategorie
+        </strong>
+
+        ${escapeHTML(
+          event.category
+        )}
+
+      </div>
+
+    </div>
+
+
+    ${
+      event.cancelled
+        ? `
+
+          <div class="cancelled-info">
+
+            <strong>
+              Veranstaltung abgesagt
+            </strong>
+
+            <p>
+              ${
+                escapeHTML(
+                  event.cancelReason ||
+                  "Für diese Veranstaltung wurde kein Absagegrund angegeben."
+                )
+              }
+            </p>
+
+          </div>
+
+        `
+        : ""
+    }
+
+
+    ${
+      event.description
+        ? `
+
+          <div class="detail-description">
+            ${escapeHTML(
+              event.description
+            )}
+          </div>
+
+        `
+        : ""
+    }
+
+
+    <div class="modal-actions">
+
+      ${
+        !event.cancelled
+          ? `
+            <button
+              class="btn"
+              onclick="downloadICal('${event.id}')"
+            >
+              📅 In Kalender eintragen
+            </button>
+          `
+          : ""
+      }
+
+
+      ${
+        event.website
+          ? `
+
+            <a
+              class="btn light"
+              href="${escapeHTML(
+                event.website
+              )}"
+              target="_blank"
+              rel="noopener"
+            >
+              🌐 Weitere Informationen
+            </a>
+
+          `
+          : ""
+      }
+
+
+      ${
+        isAdmin()
+          ? `
+
+            <button
+              class="btn light"
+              onclick="closeModal('detailModal');openAdminEdit('${event.id}')"
+            >
+              ✏️ Bearbeiten
+            </button>
+
+
+            <button
+              class="btn danger"
+              onclick="deleteEvent('${event.id}')"
+            >
+              🗑️ Löschen
+            </button>
+
+          `
+          : ""
+      }
+
+    </div>
+
+  `;
+
+
+  document
+    .getElementById(
+      "detailModal"
+    )
+    .classList.add("open");
+
+}
+
+
+/* ---------------------------------
+   MODAL
+--------------------------------- */
+
+function closeModal(id){
+
+  document
+    .getElementById(id)
+    .classList.remove("open");
+
+}
+
+
+/* ---------------------------------
+   ÖFFENTLICHE VERANSTALTUNGSANMELDUNG
+--------------------------------- */
+
+function openPublicRegistration(){
+
+  const form=
+    document.getElementById(
+      "publicRegistrationForm"
+    );
+
+  if(form)
+    form.reset();
+
+  document
+    .getElementById(
+      "publicRegistrationModal"
+    )
+    .classList.add("open");
+
+}
+
+
+function validatePublicRegistration(){
+
+  const fileInput =
+    document.getElementById("publicImage");
+
+  if(fileInput && fileInput.files.length){
+
+    const file = fileInput.files[0];
+
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif"
+    ];
+
+    if(!allowed.includes(file.type)){
+
+      showToast(
+        "Bitte nur JPG, PNG, WEBP oder GIF hochladen."
+      );
+
+      return false;
+
+    }
+
+    if(file.size > 10 * 1024 * 1024){
+
+      showToast(
+        "Das Bild darf maximal 10 MB groß sein."
+      );
+
+      return false;
+
+    }
+
+  }
+
+  return true;
+}
+
+
+function submitPublicRegistration(event){
+
+  event.preventDefault();
+
+  if(!validatePublicRegistration()) return false;
+
+  const form = document.getElementById("publicRegistrationForm");
+  const submitButton = form.querySelector('button[type="submit"]');
+
+  if(submitButton){
+    submitButton.disabled = true;
+    submitButton.textContent = "📩 Wird übermittelt …";
+  }
+
+  HTMLFormElement.prototype.submit.call(form);
+
+  setTimeout(() => {
+    closeModal("publicRegistrationModal");
+    showToast("Vielen Dank! Ihre Veranstaltung wurde übermittelt.");
+    form.reset();
+    if(submitButton){
+      submitButton.disabled = false;
+      submitButton.textContent = "📩 Veranstaltung anmelden";
+    }
+  }, 900);
+
+  return false;
+}
+
+
+
+/* ---------------------------------
+   ADMIN LOGIN
+--------------------------------- */
+
+function openAdminLogin(){
+
+  if(isAdmin()){
+
+    openAdminNew();
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "adminCode"
+  ).value = "";
+
+
+  document
+    .getElementById(
+      "loginModal"
+    )
+    .classList.add("open");
+
+}
+
+
+function loginAdmin(){
+
+  const code =
+    document
+      .getElementById(
+        "adminCode"
+      )
+      .value;
+
+
+  if(code === ADMIN_CODE){
+
+    sessionStorage.setItem(
+      ADMIN_SESSION,
+      "true"
+    );
+
+
+    closeModal(
+      "loginModal"
+    );
+
+
+    showToast(
+      "Verwaltungsbereich geöffnet."
+    );
+
+
+    openAdminNew();
+
+  }else{
+
+    showToast(
+      "Der Zugangscode ist falsch."
+    );
+
+  }
+
+}
+
+
+function logoutAdmin(){
+
+  sessionStorage.removeItem(
+    ADMIN_SESSION
+  );
+
+
+  closeModal(
+    "adminModal"
+  );
+
+
+  showToast(
+    "Sie wurden abgemeldet."
+  );
+
+
+  renderAll();
+
+}
+
+
+/* ---------------------------------
+   ADMIN: NEUE VERANSTALTUNG
+--------------------------------- */
+
+function openAdminNew(){
+
+  if(!isAdmin()){
+
+    openAdminLogin();
+
+    return;
+
+  }
+
+
+  editingId =
+    null;
+
+
+  cancellationPending =
+    false;
+
+
+  document.getElementById(
+    "adminTitle"
+  ).textContent =
+    "Neue Veranstaltung";
+
+
+  document.getElementById(
+    "eventForm"
+  ).reset();
+
+
+  document.getElementById(
+    "eventId"
+  ).value = "";
+
+
+  document.getElementById(
+    "cancelPanel"
+  ).classList.remove(
+    "open"
+  );
+
+
+  document.getElementById(
+    "cancelButton"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "uncancelButton"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "adminModal"
+  ).classList.add(
+    "open"
+  );
+
+}
+
+
+/* ---------------------------------
+   ADMIN: BEARBEITEN
+--------------------------------- */
+
+function openAdminEdit(id){
+
+  if(!isAdmin()){
+
+    openAdminLogin();
+
+    return;
+
+  }
+
+
+  const event =
+    events.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!event){
+
+    return;
+
+  }
+
+
+  editingId =
+    id;
+
+
+  cancellationPending =
+    false;
+
+
+  document.getElementById(
+    "adminTitle"
+  ).textContent =
+    "Veranstaltung bearbeiten";
+
+
+  document.getElementById(
+    "eventId"
+  ).value =
+    event.id;
+
+
+  document.getElementById(
+    "eventTitle"
+  ).value =
+    event.title || "";
+
+
+  document.getElementById(
+    "eventDate"
+  ).value =
+    event.date || "";
+
+
+  document.getElementById(
+    "eventStart"
+  ).value =
+    event.start || "";
+
+
+  document.getElementById(
+    "eventEnd"
+  ).value =
+    event.end || "";
+
+
+  document.getElementById(
+    "eventCategory"
+  ).value =
+    event.category ||
+    "Sonstiges";
+
+
+  document.getElementById(
+    "eventLocation"
+  ).value =
+    event.location || "";
+
+
+  document.getElementById(
+    "eventDescription"
+  ).value =
+    event.description || "";
+
+
+  document.getElementById(
+    "eventImage"
+  ).value =
+    "";
+
+
+  document.getElementById(
+    "eventWebsite"
+  ).value =
+    event.website || "";
+
+
+  document.getElementById(
+    "cancelReason"
+  ).value =
+    event.cancelReason || "";
+
+
+  document.getElementById(
+    "cancelPanel"
+  ).classList.remove(
+    "open"
+  );
+
+
+  document.getElementById(
+    "cancelButton"
+  ).style.display =
+    event.cancelled
+      ? "none"
+      : "inline-block";
+
+
+  document.getElementById(
+    "uncancelButton"
+  ).style.display =
+    event.cancelled
+      ? "inline-block"
+      : "none";
+
+
+  document
+    .getElementById(
+      "adminModal"
+    )
+    .classList.add(
+      "open"
+    );
+
+}
+
+
+/* ---------------------------------
+   ADMIN: SPEICHERN
+--------------------------------- */
+
+
+function readFileAsDataURL(file){
+  return new Promise((resolve,reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveEvent(eventSubmit){
+
+  eventSubmit.preventDefault();
+
+
+  if(!isAdmin()){
+
+    showToast(
+      "Keine Berechtigung."
+    );
+
+    return;
+
+  }
+
+
+  const id =
+    document.getElementById(
+      "eventId"
+    ).value ||
+    "event-" +
+    Date.now();
+
+
+  const existing =
+    events.find(
+      event =>
+        event.id === id
+    );
+
+
+  const imageInput =
+    document.getElementById("eventImage");
+
+  let imageData =
+    existing
+      ? existing.image || ""
+      : "";
+
+  if(!existing && !imageInput.files.length){
+    showToast("Bitte ein Veranstaltungsbild auswählen.");
+    return;
+  }
+
+  if(imageInput.files.length){
+
+    const file = imageInput.files[0];
+    const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
+
+    if(!allowed.includes(file.type)){
+      showToast("Bitte nur JPG, PNG, WEBP oder GIF hochladen.");
+      return;
+    }
+
+    if(file.size > 10 * 1024 * 1024){
+      showToast("Das Bild darf maximal 10 MB groß sein.");
+      return;
+    }
+
+    imageData = await readFileAsDataURL(file);
+  }
+
+
+  const eventData = {
+
+    id,
+
+    title:
+      document.getElementById(
+        "eventTitle"
+      ).value.trim(),
+
+    date:
+      document.getElementById(
+        "eventDate"
+      ).value,
+
+    start:
+      document.getElementById(
+        "eventStart"
+      ).value,
+
+    end:
+      document.getElementById(
+        "eventEnd"
+      ).value,
+
+    category:
+      document.getElementById(
+        "eventCategory"
+      ).value,
+
+    location:
+      document.getElementById(
+        "eventLocation"
+      ).value.trim(),
+
+    description:
+      document.getElementById(
+        "eventDescription"
+      ).value.trim(),
+
+    image:
+      imageData,
+
+    website:
+      document.getElementById(
+        "eventWebsite"
+      ).value.trim(),
+
+    /*
+      Wichtig:
+      Beim normalen Bearbeiten bleibt eine bestehende
+      Absage erhalten.
+    */
+
+    cancelled:
+      existing
+        ? existing.cancelled === true
+        : false,
+
+    cancelReason:
+      existing
+        ? existing.cancelReason || ""
+        : ""
+
+  };
+
+
+  if(existing){
+
+    const index =
+      events.findIndex(
+        event =>
+          event.id === id
+      );
+
+
+    events[index] =
+      eventData;
+
+  }else{
+
+    events.push(
+      eventData
+    );
+
+  }
+
+
+  saveEvents();
+
+  closeModal(
+    "adminModal"
+  );
+
+  renderAll();
+
+  showToast(
+    "Veranstaltung gespeichert."
+  );
+
+}
+
+
+/* ---------------------------------
+   ABSAGE FELD ÖFFNEN
+--------------------------------- */
+
+function showCancellationField(){
+
+  if(
+    !isAdmin() ||
+    !editingId
+  ){
+
+    return;
+
+  }
+
+
+  cancellationPending =
+    true;
+
+
+  const panel =
+    document.getElementById(
+      "cancelPanel"
+    );
+
+
+  panel.classList.add(
+    "open"
+  );
+
+
+  const reason =
+    document.getElementById(
+      "cancelReason"
+    );
+
+
+  reason.focus();
+
+
+  reason.scrollIntoView({
+
+    behavior:"smooth",
+
+    block:"center"
+
+  });
+
+}
+
+
+/* ---------------------------------
+   ABSAGE BESTÄTIGEN
+--------------------------------- */
+
+function confirmCancellation(){
+
+  if(
+    !isAdmin() ||
+    !editingId
+  ){
+
+    return;
+
+  }
+
+
+  const reason =
+    document.getElementById(
+      "cancelReason"
+    ).value.trim();
+
+
+  if(!reason){
+
+    showToast(
+      "Bitte einen Grund für die Absage eingeben."
+    );
+
+
+    document
+      .getElementById(
+        "cancelReason"
+      )
+      .focus();
+
+
+    return;
+
+  }
+
+
+  const index =
+    events.findIndex(
+      event =>
+        event.id ===
+        editingId
+    );
+
+
+  if(index === -1){
+
+    return;
+
+  }
+
+
+  events[index].cancelled =
+    true;
+
+
+  events[index].cancelReason =
+    reason;
+
+
+  saveEvents();
+
+
+  cancellationPending =
+    false;
+
+
+  document
+    .getElementById(
+      "cancelPanel"
+    )
+    .classList.remove(
+      "open"
+    );
+
+
+  document.getElementById(
+    "cancelButton"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "uncancelButton"
+  ).style.display =
+    "inline-block";
+
+
+  renderAll();
+
+
+  showToast(
+    "Die Veranstaltung wurde abgesagt."
+  );
+
+}
+
+
+/* ---------------------------------
+   ABSAGE AUFHEBEN
+--------------------------------- */
+
+function uncancelEvent(){
+
+  if(
+    !isAdmin() ||
+    !editingId
+  ){
+
+    return;
+
+  }
+
+
+  const index =
+    events.findIndex(
+      event =>
+        event.id ===
+        editingId
+    );
+
+
+  if(index === -1){
+
+    return;
+
+  }
+
+
+  events[index].cancelled =
+    false;
+
+
+  events[index].cancelReason =
+    "";
+
+
+  saveEvents();
+
+
+  document.getElementById(
+    "cancelButton"
+  ).style.display =
+    "inline-block";
+
+
+  document.getElementById(
+    "uncancelButton"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "cancelPanel"
+  ).classList.remove(
+    "open"
+  );
+
+
+  document.getElementById(
+    "cancelReason"
+  ).value =
+    "";
+
+
+  renderAll();
+
+
+  showToast(
+    "Die Absage wurde aufgehoben."
+  );
+
+}
+
+
+/* ---------------------------------
+   LÖSCHEN
+--------------------------------- */
+
+function deleteEvent(id){
+
+  if(!isAdmin()){
+
+    return;
+
+  }
+
+
+  const event =
+    events.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!event){
+
+    return;
+
+  }
+
+
+  if(
+    !confirm(
+      `Soll die Veranstaltung „${event.title}“ wirklich gelöscht werden?`
+    )
+  ){
+
+    return;
+
+  }
+
+
+  events =
+    events.filter(
+      item =>
+        item.id !== id
+    );
+
+
+  saveEvents();
+
+
+  closeModal(
+    "detailModal"
+  );
+
+
+  closeModal(
+    "adminModal"
+  );
+
+
+  renderAll();
+
+
+  showToast(
+    "Veranstaltung gelöscht."
+  );
+
+}
+
+
+/* ---------------------------------
+   ICAL
+--------------------------------- */
+
+function escapeICalText(value){
+
+  return String(value ?? "")
+    .replace(/\\/g,"\\\\")
+    .replace(/\r?\n/g,"\\n")
+    .replace(/,/g,"\\,")
+    .replace(/;/g,"\\;");
+
+}
+
+
+function icalDateTime(
+  date,
+  time
+){
+
+  const cleanTime =
+    time || "00:00";
+
+
+  const [
+    hours,
+    minutes
+  ] =
+    cleanTime.split(":");
+
+
+  const datePart =
+    date.replaceAll(
+      "-",
+      ""
+    );
+
+
+  return (
+    datePart +
+    "T" +
+    String(hours)
+      .padStart(2,"0") +
+    String(minutes)
+      .padStart(2,"0") +
+    "00"
+  );
+
+}
+
+
+function addMinutesToTime(
+  time,
+  minutes
+){
+
+  const [
+    h,
+    m
+  ] =
+    (time || "00:00")
+      .split(":")
+      .map(Number);
+
+
+  const date =
+    new Date(
+      2000,
+      0,
+      1,
+      h || 0,
+      m || 0
+    );
+
+
+  date.setMinutes(
+    date.getMinutes() +
+    minutes
+  );
+
+
+  return [
+
+    String(
+      date.getHours()
+    ).padStart(2,"0"),
+
+    String(
+      date.getMinutes()
+    ).padStart(2,"0")
+
+  ].join(":");
+
+}
+
+
+function downloadICal(id){
+
+  const event =
+    events.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!event){
+
+    return;
+
+  }
+
+
+  const start =
+    event.start ||
+    "00:00";
+
+
+  /*
+    Wenn keine Endzeit vorhanden ist,
+    wird automatisch eine Dauer von
+    zwei Stunden verwendet.
+  */
+
+  const end =
+    event.end ||
+    addMinutesToTime(
+      start,
+      120
+    );
+
+
+  const uid =
+    event.id +
+    "@veranstaltungskalender";
+
+
+  const timestamp =
+    new Date()
+      .toISOString()
+      .replace(
+        /[-:]/g,
+        ""
+      )
+      .replace(
+        /\.\d{3}/,
+        ""
+      );
+
+
+  const description =
+    event.description ||
+    "";
+
+
+  const lines = [
+
+    "BEGIN:VCALENDAR",
+
+    "VERSION:2.0",
+
+    "PRODID:-//Veranstaltungskalender//DE",
+
+    "CALSCALE:GREGORIAN",
+
+    "METHOD:PUBLISH",
+
+    "BEGIN:VEVENT",
+
+    "UID:" + uid,
+
+    "DTSTAMP:" + timestamp,
+
+    "DTSTART;TZID=Europe/Berlin:" +
+      icalDateTime(
+        event.date,
+        start
+      ),
+
+    "DTEND;TZID=Europe/Berlin:" +
+      icalDateTime(
+        event.date,
+        end
+      ),
+
+    "SUMMARY:" +
+      escapeICalText(
+        event.title
+      ),
+
+    "LOCATION:" +
+      escapeICalText(
+        event.location
+      ),
+
+    "DESCRIPTION:" +
+      escapeICalText(
+        description
+      )
+
+  ];
+
+
+  if(event.website){
+
+    lines.push(
+
+      "URL:" +
+      escapeICalText(
+        event.website
+      )
+
+    );
+
+  }
+
+
+  lines.push(
+
+    "END:VEVENT",
+
+    "END:VCALENDAR"
+
+  );
+
+
+  const blob =
+    new Blob(
+
+      [
+        lines.join(
+          "\r\n"
+        )
+      ],
+
+      {
+        type:
+          "text/calendar;charset=utf-8"
+      }
+
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+
+  link.href =
+    url;
+
+
+  link.download =
+    event.title
+      .replace(
+        /[^\wäöüÄÖÜß\- ]/g,
+        ""
+      )
+      .trim()
+      .replace(
+        /\s+/g,
+        "-"
+      ) +
+    ".ics";
+
+
+  document.body.appendChild(
+    link
+  );
+
+
+  link.click();
+
+
+  link.remove();
+
+
+  setTimeout(
+
+    () =>
+      URL.revokeObjectURL(
+        url
+      ),
+
+    1000
+
+  );
+
+
+  showToast(
+    "Kalendereintrag wurde erstellt."
+  );
+
+}
+
+
+/* ---------------------------------
+   MODAL KLICK AUF HINTERGRUND
+--------------------------------- */
+
+document
+  .querySelectorAll(
+    ".modal-backdrop"
+  )
+  .forEach(
+    backdrop => {
+
+      backdrop.addEventListener(
+
+        "click",
+
+        function(event){
+
+          if(
+            event.target ===
+            backdrop
+          ){
+
+            backdrop.classList.remove(
+              "open"
+            );
+
+          }
+
+        }
+
+      );
+
+    }
+  );
+
+
+/* ---------------------------------
+   START
+--------------------------------- */
+
+loadEvents();
+
+</script>
+
+</body>
+</html>
