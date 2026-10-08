@@ -4385,6 +4385,18 @@ document
 loadEvents();
 
 </script>
-
+<script>
+  function sendHeightToParent() {
+    const height = document.documentElement.scrollHeight || document.body.scrollHeight;
+    window.parent.postMessage({ height: height }, '*');
+  }
+  
+  window.addEventListener('load', sendHeightToParent);
+  window.addEventListener('resize', sendHeightToParent);
+  // Löst die Höhenmessung auch bei Klicks (z.B. Popups, Filtern) aus:
+  document.addEventListener('click', function() {
+    setTimeout(sendHeightToParent, 150);
+  });
+</script>
 </body>
 </html>
