@@ -1755,7 +1755,7 @@ textarea{
                 id="eventImage"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
-              >
+              />
             </div>
 
             <div class="public-upload-info">
@@ -1892,7 +1892,7 @@ let cancellationPending =
 
 
 /* ---------------------------------
-   DEMO-EVENTS
+   DEMO-EVENTS / JSON LADEN
 --------------------------------- */
 
 const demoEvents = [
@@ -1961,35 +1961,40 @@ const demoEvents = [
 
 
 /* ---------------------------------
-   INITIALISIERUNG
+   INITIALISIERUNG & JSON-EINLESEN
 --------------------------------- */
 
-function loadEvents(){
+async function loadEvents(){
 
   try{
-
-    const stored =
-      localStorage.getItem(STORAGE);
-
-    if(stored){
-
-      events =
-        JSON.parse(stored);
-
-    }else{
-
-      events =
-        demoEvents;
-
-      saveEvents();
-
+    // Versuche die events.json direkt von GitHub / dem Server zu laden
+    const response = await fetch('events.json?' + new Date().getTime());
+    
+    if(response.ok){
+      const data = await response.json();
+      if(Array.isArray(data) && data.length > 0){
+        events = data;
+      } else {
+        events = demoEvents;
+      }
+    } else {
+      events = demoEvents;
     }
 
   }catch(error){
-
-    events =
-      demoEvents;
-
+    console.log("Konnte events.json nicht laden, nutze Fallback / LocalStorage", error);
+    
+    try{
+      const stored = localStorage.getItem(STORAGE);
+      if(stored){
+        events = JSON.parse(stored);
+      } else {
+        events = demoEvents;
+        saveEvents();
+      }
+    }catch(err){
+      events = demoEvents;
+    }
   }
 
 
@@ -2011,8 +2016,6 @@ function loadEvents(){
 
     }));
 
-
-  saveEvents();
 
   renderAll();
 
@@ -4385,18 +4388,6 @@ document
 loadEvents();
 
 </script>
-<script>
-  function sendHeightToParent() {
-    const height = document.documentElement.scrollHeight || document.body.scrollHeight;
-    window.parent.postMessage({ height: height }, '*');
-  }
-  
-  window.addEventListener('load', sendHeightToParent);
-  window.addEventListener('resize', sendHeightToParent);
-  // Löst die Höhenmessung auch bei Klicks (z.B. Popups, Filtern) aus:
-  document.addEventListener('click', function() {
-    setTimeout(sendHeightToParent, 150);
-  });
-</script>
+
 </body>
 </html>
