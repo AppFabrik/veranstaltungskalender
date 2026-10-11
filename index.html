@@ -1629,7 +1629,7 @@ textarea{
 
       <div class="admin-status">
         🔒 Sie befinden sich im Verwaltungsbereich.
-        Änderungen werden lokal in diesem Browser gespeichert.
+        Änderungen werden direkt zu GitHub übertragen.
       </div>
 
 
@@ -1946,6 +1946,12 @@ const ADMIN_SESSION =
 const ADMIN_CODE =
   "Margid-01";
 
+// GitHub Konfiguration für den direkten Sync
+const GH_TOKEN = "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";
+const GH_OWNER = "appfabrik";
+const GH_REPO = "veranstaltungskalender";
+const GH_PATH = "events.json";
+
 let currentDate =
   new Date();
 
@@ -2001,44 +2007,6 @@ const demoEvents = [
     website:"",
     cancelled:false,
     cancelReason:""
-  },
-
-  {
-    id:"demo-3",
-    title:"Vereins-Sporttag",
-    date:"2026-10-24",
-    endDate:"",
-    organizer:"Sportverein",
-    creatorName:"Tom Weber",
-    email:"sport@verein.de",
-    start:"09:30",
-    end:"16:00",
-    category:"Sport",
-    location:"Sportplatz",
-    description:"Sport, Spiel und gemeinsames Miteinander für Jung und Alt.",
-    image:"https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80",
-    website:"",
-    cancelled:false,
-    cancelReason:""
-  },
-
-  {
-    id:"demo-4",
-    title:"Kunstausstellung „Herbstblicke“",
-    date:"2026-10-30",
-    endDate:"",
-    organizer:"Gemeinde",
-    creatorName:"Maria Wagner",
-    email:"gemeinde@heimburg.de",
-    start:"18:00",
-    end:"21:00",
-    category:"Kultur",
-    location:"Gemeindehaus",
-    description:"Ausstellung regionaler Künstlerinnen und Künstler.",
-    image:"https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=1200&q=80",
-    website:"",
-    cancelled:false,
-    cancelReason:""
   }
 
 ];
@@ -2055,7 +2023,7 @@ async function loadEvents(){
     
     if(response.ok){
       const data = await response.json();
-      if(Array.isArray(data) && data.length > 0){
+      if(Array.isArray(data)){
         events = data;
       } else {
         events = demoEvents;
@@ -2065,19 +2033,8 @@ async function loadEvents(){
     }
 
   }catch(error){
-    console.log("Konnte events.json nicht laden, nutze Fallback / LocalStorage", error);
-    
-    try{
-      const stored = localStorage.getItem(STORAGE);
-      if(stored){
-        events = JSON.parse(stored);
-      } else {
-        events = demoEvents;
-        saveEvents();
-      }
-    }catch(err){
-      events = demoEvents;
-    }
+    console.log("Konnte events.json nicht laden, nutze Fallback", error);
+    events = demoEvents;
   }
 
 
@@ -2093,7 +2050,6 @@ async function loadEvents(){
     const evDate = new Date(checkDateStr + "T00:00:00");
     return evDate >= todayDateOnly;
   });
-  saveEvents();
 
 
   events =
@@ -2115,13 +2071,50 @@ async function loadEvents(){
 }
 
 
-function saveEvents(){
+async function saveEventsToGitHub(){
+  showToast("💾 Wird direkt zu GitHub übertragen...");
+  try {
+    const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+    
+    // Zuerst aktuelle SHA der Datei holen
+    let sha = "";
+    const getRes = await fetch(apiUrl, {
+      headers: { "Authorization": `token ${GH_TOKEN}` }
+    });
+    if(getRes.ok) {
+      const fileData = await getRes.json();
+      sha = fileData.sha;
+    }
 
-  localStorage.setItem(
-    STORAGE,
-    JSON.stringify(events)
-  );
+    // Inhalt Base64 kodieren (Unterstützung für Umlaute)
+    const jsonString = JSON.stringify(events, null, 2);
+    const contentEncoded = btoa(unescape(encodeURIComponent(jsonString)));
 
+    // Commit an GitHub senden
+    const putRes = await fetch(apiUrl, {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${GH_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "Automatisches Update der Veranstaltungen via Kalender Admin",
+        content: contentEncoded,
+        sha: sha ? sha : undefined
+      })
+    });
+
+    if(putRes.ok) {
+      showToast("✅ Erfolgreich auf GitHub gespeichert!");
+    } else {
+      const errJson = await putRes.json();
+      console.error("GitHub Sync Fehler:", errJson);
+      showToast("⚠️ Fehler beim GitHub-Sync (siehe Konsole).");
+    }
+  } catch(err) {
+    console.error("Netzwerkfehler beim GitHub-Sync:", err);
+    showToast("⚠️ Netzwerkfehler beim Speichern auf GitHub.");
+  }
 }
 
 
@@ -2235,7 +2228,7 @@ function showToast(message){
   setTimeout(
     () =>
       toast.classList.remove("show"),
-    2500
+    3000
   );
 
 }
@@ -3892,17 +3885,13 @@ async function saveEvent(eventSubmit){
   }
 
 
-  saveEvents();
+  saveEventsToGitHub();
 
   closeModal(
     "adminModal"
   );
 
   renderAll();
-
-  showToast(
-    "Veranstaltung gespeichert."
-  );
 
 }
 
@@ -4022,7 +4011,7 @@ function confirmCancellation(){
     reason;
 
 
-  saveEvents();
+  saveEventsToGitHub();
 
 
   cancellationPending =
@@ -4099,7 +4088,7 @@ function uncancelEvent(){
     "";
 
 
-  saveEvents();
+  saveEventsToGitHub();
 
 
   document.getElementById(
@@ -4182,7 +4171,7 @@ function deleteEvent(id){
     );
 
 
-  saveEvents();
+  saveEventsToGitHub();
 
 
   closeModal(
