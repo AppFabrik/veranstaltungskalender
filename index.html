@@ -2017,9 +2017,8 @@ const demoEvents = [
 --------------------------------- */
 
 async function loadEvents(){
-
   try{
-    const response = await fetch('events.json?' + new Date().getTime());
+    const response = await fetch('https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/main/' + GH_PATH + '?' + new Date().getTime());
     
     if(response.ok){
       const data = await response.json();
@@ -2031,17 +2030,11 @@ async function loadEvents(){
     } else {
       events = demoEvents;
     }
-
   }catch(error){
     console.log("Konnte events.json nicht laden, nutze Fallback", error);
     events = demoEvents;
   }
 
-
-  /*
-    Automatische dauerhafte Entfernung von Veranstaltungen,
-    deren Datum vorbei ist.
-  */
   const todayDateOnly = new Date();
   todayDateOnly.setHours(0, 0, 0, 0);
 
@@ -2051,34 +2044,23 @@ async function loadEvents(){
     return evDate >= todayDateOnly;
   });
 
-
-  events =
-    events.map(event => ({
-
-      ...event,
-
-      cancelled:
-        event.cancelled === true,
-
-      cancelReason:
-        event.cancelReason || ""
-
-    }));
-
+  events = events.map(event => ({
+    ...event,
+    cancelled: event.cancelled === true,
+    cancelReason: event.cancelReason || ""
+  }));
 
   renderAll();
-
 }
 
 
 async function saveEventsToGitHub(){
-  showToast("💾 Wird direkt zu GitHub übertragen...");
+  showToast("💾 Speichere direkt auf GitHub...");
   try {
     const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
     
-    // Zuerst aktuelle SHA der Datei holen
     let sha = "";
-    const getRes = await fetch(apiUrl, {
+    const getRes = await fetch(apiUrl + "?" + new Date().getTime(), {
       headers: { "Authorization": `token ${GH_TOKEN}` }
     });
     if(getRes.ok) {
@@ -2086,11 +2068,9 @@ async function saveEventsToGitHub(){
       sha = fileData.sha;
     }
 
-    // Inhalt Base64 kodieren (Unterstützung für Umlaute)
     const jsonString = JSON.stringify(events, null, 2);
     const contentEncoded = btoa(unescape(encodeURIComponent(jsonString)));
 
-    // Commit an GitHub senden
     const putRes = await fetch(apiUrl, {
       method: "PUT",
       headers: {
@@ -2098,7 +2078,7 @@ async function saveEventsToGitHub(){
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        message: "Automatisches Update der Veranstaltungen via Kalender Admin",
+        message: "Update der Veranstaltungen über Admin-Bereich",
         content: contentEncoded,
         sha: sha ? sha : undefined
       })
@@ -2106,14 +2086,15 @@ async function saveEventsToGitHub(){
 
     if(putRes.ok) {
       showToast("✅ Erfolgreich auf GitHub gespeichert!");
+      setTimeout(loadEvents, 1500);
     } else {
       const errJson = await putRes.json();
       console.error("GitHub Sync Fehler:", errJson);
-      showToast("⚠️ Fehler beim GitHub-Sync (siehe Konsole).");
+      showToast("⚠️ Fehler beim GitHub-Sync.");
     }
   } catch(err) {
-    console.error("Netzwerkfehler beim GitHub-Sync:", err);
-    showToast("⚠️ Netzwerkfehler beim Speichern auf GitHub.");
+    console.error("Netzwerkfehler:", err);
+    showToast("⚠️ Netzwerkfehler beim Speichern.");
   }
 }
 
