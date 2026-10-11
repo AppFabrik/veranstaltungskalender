@@ -1646,7 +1646,53 @@ textarea{
 
         <div class="form-grid">
 
-          <div class="form-group full">
+          <div class="form-group">
+
+            <label for="eventOrganizer">
+              Name / Veranstalter <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="eventOrganizer"
+              required
+              placeholder="z. B. Feuerwehr Heimburg"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="eventCreatorName">
+              Name des Erstellers <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="eventCreatorName"
+              required
+              placeholder="z. B. Max Mustermann"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="eventEmail">
+              E-Mail-Adresse <span class="public-required">*</span>
+            </label>
+
+            <input
+              id="eventEmail"
+              type="email"
+              required
+              placeholder="ihre@email.de"
+            >
+
+          </div>
+
+
+          <div class="form-group">
 
             <label for="eventTitle">
               Titel *
@@ -1671,6 +1717,20 @@ textarea{
               id="eventDate"
               type="date"
               required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="eventEndDate">
+              Datum bis (optional)
+            </label>
+
+            <input
+              id="eventEndDate"
+              type="date"
             >
 
           </div>
@@ -1740,20 +1800,6 @@ textarea{
 
           <div class="form-group full">
 
-            <label for="eventDescription">
-              Beschreibung
-            </label>
-
-            <textarea
-              id="eventDescription"
-              placeholder="Weitere Informationen zur Veranstaltung …"
-            ></textarea>
-
-          </div>
-
-
-          <div class="form-group full">
-
             <label for="eventImage">
               Veranstaltungsbild *
             </label>
@@ -1769,6 +1815,20 @@ textarea{
             <div class="public-upload-info">
               Bild direkt vom Rechner auswählen · JPG, PNG, WEBP oder GIF · maximal 10 MB
             </div>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="eventDescription">
+              Beschreibung
+            </label>
+
+            <textarea
+              id="eventDescription"
+              placeholder="Weitere Informationen zur Veranstaltung …"
+            ></textarea>
 
           </div>
 
@@ -1909,6 +1969,10 @@ const demoEvents = [
     id:"demo-1",
     title:"Herbstmarkt im Ortskern",
     date:"2026-10-10",
+    endDate:"",
+    organizer:"Feuerwehr Heimburg",
+    creatorName:"Max Mustermann",
+    email:"info@feuerwehr-heimburg.de",
     start:"10:00",
     end:"17:00",
     category:"Feste & Feiern",
@@ -1924,6 +1988,10 @@ const demoEvents = [
     id:"demo-2",
     title:"Abendkonzert unter freiem Himmel",
     date:"2026-10-17",
+    endDate:"",
+    organizer:"Kulturverein",
+    creatorName:"Anna Schmidt",
+    email:"kontakt@kulturverein.de",
     start:"19:00",
     end:"22:00",
     category:"Musik",
@@ -1939,6 +2007,10 @@ const demoEvents = [
     id:"demo-3",
     title:"Vereins-Sporttag",
     date:"2026-10-24",
+    endDate:"",
+    organizer:"Sportverein",
+    creatorName:"Tom Weber",
+    email:"sport@verein.de",
     start:"09:30",
     end:"16:00",
     category:"Sport",
@@ -1954,6 +2026,10 @@ const demoEvents = [
     id:"demo-4",
     title:"Kunstausstellung „Herbstblicke“",
     date:"2026-10-30",
+    endDate:"",
+    organizer:"Gemeinde",
+    creatorName:"Maria Wagner",
+    email:"gemeinde@heimburg.de",
     start:"18:00",
     end:"21:00",
     category:"Kultur",
@@ -2013,7 +2089,8 @@ async function loadEvents(){
   todayDateOnly.setHours(0, 0, 0, 0);
 
   events = events.filter(event => {
-    const evDate = new Date(event.date + "T00:00:00");
+    const checkDateStr = event.endDate || event.date;
+    const evDate = new Date(checkDateStr + "T00:00:00");
     return evDate >= todayDateOnly;
   });
   saveEvents();
@@ -2192,7 +2269,8 @@ function getFilteredEvents(){
         event.title,
         event.location,
         event.description,
-        event.category
+        event.category,
+        event.organizer
 
       ]
         .join(" ")
@@ -2343,6 +2421,12 @@ function renderEventCard(event){
       : "";
 
 
+  const dateDisplay =
+    event.endDate
+      ? formatDate(event.date) + " – " + formatDate(event.endDate)
+      : formatDate(event.date);
+
+
   return `
 
     <article
@@ -2375,7 +2459,7 @@ function renderEventCard(event){
       <div class="card-body">
 
         <div class="date-badge">
-          ${formatDate(event.date)}
+          ${dateDisplay}
         </div>
 
 
@@ -2402,6 +2486,12 @@ function renderEventCard(event){
 
           📍
           ${escapeHTML(event.location)}
+
+          ${
+            event.organizer
+              ? `<br>👤 ${escapeHTML(event.organizer)}`
+              : ""
+          }
 
         </div>
 
@@ -2641,10 +2731,11 @@ function renderSingleCalendar(
 
 
     const dayEvents =
-      events.filter(
-        event =>
-          event.date === iso
-      );
+      events.filter(event => {
+        if (!event.date) return false;
+        if (!event.endDate) return event.date === iso;
+        return iso >= event.date && iso <= event.endDate;
+      });
 
 
     html += `
@@ -2964,6 +3055,12 @@ function openDetail(id){
     event.title;
 
 
+  const dateLongDisplay =
+    event.endDate
+      ? formatDateLong(event.date) + " bis " + formatDateLong(event.endDate)
+      : formatDateLong(event.date);
+
+
   document.getElementById(
     "detailBody"
   ).innerHTML = `
@@ -3001,7 +3098,7 @@ function openDetail(id){
           Datum
         </strong>
 
-        ${formatDateLong(event.date)}
+        ${dateLongDisplay}
 
       </div>
 
@@ -3052,6 +3149,17 @@ function openDetail(id){
         )}
 
       </div>
+
+      ${
+        event.organizer
+          ? `
+            <div>
+              <strong>Veranstalter</strong>
+              ${escapeHTML(event.organizer)}
+            </div>
+          `
+          : ""
+      }
 
     </div>
 
@@ -3488,6 +3596,24 @@ function openAdminEdit(id){
 
 
   document.getElementById(
+    "eventOrganizer"
+  ).value =
+    event.organizer || "";
+
+
+  document.getElementById(
+    "eventCreatorName"
+  ).value =
+    event.creatorName || "";
+
+
+  document.getElementById(
+    "eventEmail"
+  ).value =
+    event.email || "";
+
+
+  document.getElementById(
     "eventTitle"
   ).value =
     event.title || "";
@@ -3497,6 +3623,12 @@ function openAdminEdit(id){
     "eventDate"
   ).value =
     event.date || "";
+
+
+  document.getElementById(
+    "eventEndDate"
+  ).value =
+    event.endDate || "";
 
 
   document.getElementById(
@@ -3663,6 +3795,21 @@ async function saveEvent(eventSubmit){
 
     id,
 
+    organizer:
+      document.getElementById(
+        "eventOrganizer"
+      ).value.trim(),
+
+    creatorName:
+      document.getElementById(
+        "eventCreatorName"
+      ).value.trim(),
+
+    email:
+      document.getElementById(
+        "eventEmail"
+      ).value.trim(),
+
     title:
       document.getElementById(
         "eventTitle"
@@ -3671,6 +3818,11 @@ async function saveEvent(eventSubmit){
     date:
       document.getElementById(
         "eventDate"
+      ).value,
+
+    endDate:
+      document.getElementById(
+        "eventEndDate"
       ).value,
 
     start:
@@ -4227,7 +4379,7 @@ function downloadICal(id){
 
     "DTEND;TZID=Europe/Berlin:" +
       icalDateTime(
-        event.date,
+        event.endDate || event.date,
         end
       ),
 
