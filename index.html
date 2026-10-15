@@ -283,11 +283,6 @@ textarea{
   font-weight:700;
 }
 
-.calendar-nav{
-  display:flex;
-  gap:7px;
-}
-
 .calendar-grid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
@@ -694,29 +689,6 @@ textarea{
   margin-top:18px;
 }
 
-/* ÖFFENTLICHE VERANSTALTUNGSANMELDUNG */
-
-.public-upload{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:14px;
-  border:1px dashed var(--line);
-  border-radius:12px;
-  background:var(--paper2)
-}
-
-.public-upload input[type="file"]{
-  padding:8px;
-  background:#fff
-}
-
-.public-upload-info{
-  margin-top:6px;
-  color:var(--muted);
-  font:12px/1.45 Arial,sans-serif
-}
-
 .public-required{
   color:var(--danger)
 }
@@ -966,18 +938,9 @@ textarea{
       </p>
 
       <div class="hero-actions">
-
-        <button
-          class="btn secondary"
-          onclick="openPublicRegistration()"
-        >
-          Veranstaltung anmelden
-        </button>
-
         <button class="btn secondary" onclick="openAdminLogin()">
           🔒 Verwaltung
         </button>
-
       </div>
     </section>
   </header>
@@ -1196,351 +1159,6 @@ textarea{
 </div>
 
 
-<!-- ÖFFENTLICHE VERANSTALTUNGSANMELDUNG (Webhook 1) -->
-
-<div class="modal-backdrop" id="publicRegistrationModal">
-
-  <div class="modal">
-
-    <div class="modal-header">
-
-      <h2>
-        Veranstaltung anmelden
-      </h2>
-
-      <button
-        type="button"
-        class="close"
-        onclick="closeModal('publicRegistrationModal')"
-      >
-        ×
-      </button>
-
-    </div>
-
-    <div class="modal-body">
-
-      <div class="admin-status">
-        📝 Sie möchten eine Veranstaltung eintragen? Füllen Sie bitte die folgenden Felder aus. Ihre Anmeldung wird anschließend an uns übermittelt und geprüft.
-      </div>
-
-      <form
-        id="publicRegistrationForm"
-        action="https://hook.eu1.make.com/0geuyiem2dtji2jt5bwjrelov3aln3lr"
-        method="POST"
-        enctype="multipart/form-data"
-        target="makeWebhookFrame"
-        onsubmit="return submitPublicRegistration(event)"
-      >
-
-        <input
-          type="hidden"
-          name="Anmeldungstyp"
-          value="Veranstalter"
-        >
-
-        <div class="form-grid">
-
-          <div class="form-group">
-
-            <label for="publicName">
-              Name / Veranstalter <span class="public-required">*</span>
-            </label>
-
-            <input
-              id="publicName"
-              name="Veranstalter"
-              required
-              placeholder="z. B. Feuerwehr Heimburg"
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="publicCreator">
-              Name des Erstellers <span class="public-required">*</span>
-            </label>
-
-            <input
-              id="publicCreator"
-              name="Ersteller"
-              required
-              placeholder="z. B. Max Mustermann"
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="publicEmail">
-              E-Mail-Adresse <span class="public-required">*</span>
-            </label>
-
-            <input
-              id="publicEmail"
-              name="email"
-              type="email"
-              required
-              placeholder="ihre@email.de"
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="publicTitle">
-              Titel <span class="public-required">*</span>
-            </label>
-
-            <input
-              id="publicTitle"
-              name="Titel"
-              required
-              placeholder="z. B. Dorffest Heimburg"
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="publicDate">
-              Datum <span class="public-required">*</span>
-            </label>
-
-            <input
-              id="publicDate"
-              name="Datum"
-              type="date"
-              required
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="publicEndDate">
-              Datum bis (optional)
-            </label>
-
-            <input
-              id="publicEndDate"
-              name="Datum_bis"
-              type="date"
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="publicCategory">
-              Kategorie
-            </label>
-
-            <select
-              id="publicCategory"
-              name="Kategorie"
-            >
-              <option value="Kultur">Kultur</option>
-              <option value="Sport">Sport</option>
-              <option value="Feste & Feiern">Feste & Feiern</option>
-              <option value="Musik">Musik</option>
-              <option value="Verein">Verein</option>
-              <option value="Sonstiges">Sonstiges</option>
-            </select>
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="publicStart">
-              Beginn <span class="public-required">*</span>
-            </label>
-
-            <input
-              id="publicStart"
-              name="Beginn"
-              type="time"
-              required
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="publicEnd">
-              Ende
-            </label>
-
-            <input
-              id="publicEnd"
-              name="Ende"
-              type="time"
-            >
-
-          </div>
-
-
-          <div class="form-group full">
-
-            <label for="publicLocation">
-              Veranstaltungsort <span class="public-required">*</span>
-            </label>
-
-            <input
-              id="publicLocation"
-              name="Ort"
-              required
-              placeholder="z. B. Festplatz Heimburg"
-            >
-
-          </div>
-
-
-          <div class="form-group full">
-
-            <label for="publicImage">
-              Veranstaltungsbild
-            </label>
-
-            <div class="public-upload">
-
-              <input
-                id="publicImage"
-                name="Bild"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-              >
-
-            </div>
-
-            <div class="public-upload-info">
-              JPG, PNG, WEBP oder GIF · maximal 10 MB
-            </div>
-
-          </div>
-
-          <div class="form-group full">
-
-            <label for="publicDescription">
-              Beschreibung
-            </label>
-
-            <textarea
-              id="publicDescription"
-              name="Beschreibung"
-              placeholder="Weitere Informationen zur Veranstaltung …"
-            ></textarea>
-
-          </div>
-
-
-          <div class="form-group full">
-
-            <label for="publicWebsite">
-              Website / weitere Informationen
-            </label>
-
-            <input
-              id="publicWebsite"
-              name="Website"
-              type="url"
-              placeholder="https://..."
-            >
-
-          </div>
-
-        </div>
-
-
-        <div class="admin-actions">
-
-          <button
-            type="submit"
-            class="btn"
-          >
-            📩 Veranstaltung anmelden
-          </button>
-
-          <button
-            type="button"
-            class="btn light"
-            onclick="closeModal('publicRegistrationModal')"
-          >
-            Abbrechen
-          </button>
-
-        </div>
-
-      </form>
-
-      <iframe name="makeWebhookFrame" id="makeWebhookFrame" title="Formularübertragung" style="display:none;width:0;height:0;border:0"></iframe>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-<!-- DANKES-POPUP MODAL -->
-
-<div
-  class="modal-backdrop"
-  id="thankYouModal"
->
-
-  <div class="modal" style="max-width:500px; text-align:center;">
-
-    <div class="modal-header" style="justify-content:center;">
-
-      <h2 style="font-size:24px; color:var(--accent-dark);">
-        🎉 Vielen Dank!
-      </h2>
-
-    </div>
-
-    <div class="modal-body" style="padding:30px 24px;">
-
-      <div style="width:70px; height:70px; margin:0 auto 18px; background:var(--paper2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--accent);">
-        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
-      </div>
-
-      <h3 style="margin:0 0 10px; font-size:20px; color:var(--ink);">
-        Vielen Dank für Ihre Registrierung!
-      </h3>
-
-      <p style="margin:0 0 24px; font:15px/1.6 Arial,sans-serif; color:var(--muted);">
-        Ihre Veranstaltung wird vom Betreiber für die Freischaltung geprüft und anschließend im Kalender eingetragen.
-      </p>
-
-      <button
-        type="button"
-        class="btn"
-        style="width:100%; max-width:200px;"
-        onclick="closeModal('thankYouModal')"
-      >
-        Verstanden
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
-
-
 <!-- ADMIN LOGIN -->
 
 <div
@@ -1630,9 +1248,7 @@ textarea{
 
       <div class="admin-status">
         🔒 Sie befinden sich im Verwaltungsbereich.
-        Änderungen werden direkt an GitHub übertragen.
       </div>
-
 
       <form
         id="eventForm"
@@ -1643,7 +1259,6 @@ textarea{
           type="hidden"
           id="eventId"
         >
-
 
         <div class="form-grid">
 
@@ -1801,21 +1416,15 @@ textarea{
 
           <div class="form-group full">
 
-            <label for="eventImage">
-              Veranstaltungsbild *
+            <label for="eventImageUrl">
+              Bild-URL (z. B. von der Jimdo-Unterseite)
             </label>
 
-            <div class="public-upload">
-              <input
-                id="eventImage"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-              />
-            </div>
-
-            <div class="public-upload-info">
-              Bild direkt vom Rechner auswählen · JPG, PNG, WEBP oder GIF · maximal 10 MB
-            </div>
+            <input
+              id="eventImageUrl"
+              type="url"
+              placeholder="https://deine-domain.jimdofree.com/s/cc_images/cache_..."
+            >
 
           </div>
 
@@ -1947,11 +1556,6 @@ const ADMIN_SESSION =
 const ADMIN_CODE =
   "Margid-01";
 
-// Direkte GitHub Konfiguration mit deinem neuen Token
-const GITHUB_TOKEN = "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";
-const GITHUB_REPO = "appfabrik/veranstaltungskalender";
-const GITHUB_BRANCH = "main";
-
 let currentDate =
   new Date();
 
@@ -2042,100 +1646,6 @@ async function loadEvents(){
   }));
 
   renderAll();
-}
-
-
-/* ---------------------------------
-   DIREKTE GITHUB SYNCHRONISATION
---------------------------------- */
-
-async function uploadImageToGitHub(file) {
-  showToast("📤 Lade Bild zu GitHub hoch...");
-  const fileName = "image-" + Date.now() + "-" + file.name.replace(/[^a-zA-Z0-9_.-]/g, "_");
-  const path = "images/" + fileName;
-  
-  const base64Content = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64String = reader.result.split(',')[1];
-      resolve(base64String);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`;
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "Authorization": `token ${GITHUB_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      message: `Upload image ${fileName}`,
-      content: base64Content,
-      branch: GITHUB_BRANCH
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error("Fehler beim Hochladen des Bildes zu GitHub");
-  }
-
-  const data = await response.json();
-  return data.content.download_url;
-}
-
-async function saveEventsToGitHub(allEvents) {
-  showToast("💾 Speichere events.json auf GitHub...");
-  const path = "events.json";
-  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`;
-
-  try {
-    let sha = "";
-    const getRes = await fetch(url, {
-      headers: {
-        "Authorization": `token ${GITHUB_TOKEN}`
-      }
-    });
-    if (getRes.ok) {
-      const fileData = await getRes.json();
-      sha = fileData.sha;
-    }
-
-    const jsonString = JSON.stringify(allEvents, null, 2);
-    const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-
-    const putBody = {
-      message: "Update events.json via Admin Dashboard",
-      content: base64Content,
-      branch: GITHUB_BRANCH
-    };
-    if (sha) {
-      putBody.sha = sha;
-    }
-
-    const putRes = await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Authorization": `token ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(putBody)
-    });
-
-    if (putRes.ok) {
-      showToast("✅ Erfolgreich auf GitHub gespeichert!");
-      setTimeout(loadEvents, 1500);
-    } else {
-      const errJson = await putRes.json();
-      console.error("GitHub Fehler:", errJson);
-      showToast("⚠️ Fehler beim Speichern auf GitHub.");
-    }
-  } catch (err) {
-    console.error("Netzwerkfehler:", err);
-    showToast("⚠️ Netzwerkfehler bei GitHub-Verbindung.");
-  }
 }
 
 
@@ -3306,102 +2816,6 @@ function closeModal(id){
 
 
 /* ---------------------------------
-   ÖFFENTLICHE VERANSTALTUNGSANMELDUNG
---------------------------------- */
-
-function openPublicRegistration(){
-
-  const form=
-    document.getElementById(
-      "publicRegistrationForm"
-    );
-
-  if(form)
-    form.reset();
-
-  document
-    .getElementById(
-      "publicRegistrationModal"
-    )
-    .classList.add("open");
-
-}
-
-
-function validatePublicRegistration(){
-
-  const fileInput =
-    document.getElementById("publicImage");
-
-  if(fileInput && fileInput.files.length){
-
-    const file = fileInput.files[0];
-
-    const allowed = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/gif"
-    ];
-
-    if(!allowed.includes(file.type)){
-
-      showToast(
-        "Bitte nur JPG, PNG, WEBP oder GIF hochladen."
-      );
-
-      return false;
-
-    }
-
-    if(file.size > 10 * 1024 * 1024){
-
-      showToast(
-        "Das Bild darf maximal 10 MB groß sein."
-      );
-
-      return false;
-
-    }
-
-  }
-
-  return true;
-}
-
-
-function submitPublicRegistration(event){
-
-  event.preventDefault();
-
-  if(!validatePublicRegistration()) return false;
-
-  const form = document.getElementById("publicRegistrationForm");
-  const submitButton = form.querySelector('button[type="submit"]');
-
-  if(submitButton){
-    submitButton.disabled = true;
-    submitButton.textContent = "📩 Wird übermittelt …";
-  }
-
-  HTMLFormElement.prototype.submit.call(form);
-
-  setTimeout(() => {
-    closeModal("publicRegistrationModal");
-    document.getElementById("thankYouModal").classList.add("open");
-    form.reset();
-    if(submitButton){
-      submitButton.disabled = false;
-      submitButton.textContent = "📩 Veranstaltung anmelden";
-    }
-  }, 900);
-
-  return false;
-}
-
-
-
-/* ---------------------------------
    ADMIN LOGIN
 --------------------------------- */
 
@@ -3677,9 +3091,9 @@ function openAdminEdit(id){
 
 
   document.getElementById(
-    "eventImage"
+    "eventImageUrl"
   ).value =
-    "";
+    event.image || "";
 
 
   document.getElementById(
@@ -3732,7 +3146,7 @@ function openAdminEdit(id){
    ADMIN: SPEICHERN
 --------------------------------- */
 
-async function saveEvent(eventSubmit){
+function saveEvent(eventSubmit){
 
   eventSubmit.preventDefault();
 
@@ -3763,41 +3177,8 @@ async function saveEvent(eventSubmit){
     );
 
 
-  const imageInput =
-    document.getElementById("eventImage");
-
-  let imageUrl =
-    existing
-      ? existing.image || ""
-      : "";
-
-  if(!existing && !imageInput.files.length){
-    showToast("Bitte ein Veranstaltungsbild auswählen.");
-    return;
-  }
-
-  if(imageInput.files.length){
-
-    const file = imageInput.files[0];
-    const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
-
-    if(!allowed.includes(file.type)){
-      showToast("Bitte nur JPG, PNG, WEBP oder GIF hochladen.");
-      return;
-    }
-
-    if(file.size > 10 * 1024 * 1024){
-      showToast("Das Bild darf maximal 10 MB groß sein.");
-      return;
-    }
-
-    try {
-      imageUrl = await uploadImageToGitHub(file);
-    } catch (err) {
-      showToast("Fehler beim Hochladen des Bildes.");
-      return;
-    }
-  }
+  const imageUrl =
+    document.getElementById("eventImageUrl").value.trim();
 
 
   const eventData = {
@@ -3860,7 +3241,7 @@ async function saveEvent(eventSubmit){
       ).value.trim(),
 
     image:
-      imageUrl,
+      imageUrl || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80",
 
     website:
       document.getElementById(
@@ -3901,14 +3282,13 @@ async function saveEvent(eventSubmit){
   }
 
 
-  // Sende die komplette Liste direkt an GitHub
-  await saveEventsToGitHub(events);
-
   closeModal(
     "adminModal"
   );
 
   renderAll();
+
+  showToast("Veranstaltung lokal gespeichert.");
 
 }
 
@@ -3968,7 +3348,7 @@ function showCancellationField(){
    ABSAGE BESTÄTIGEN
 --------------------------------- */
 
-async function confirmCancellation(){
+function confirmCancellation(){
 
   if(
     !isAdmin() ||
@@ -4028,9 +3408,6 @@ async function confirmCancellation(){
     reason;
 
 
-  await saveEventsToGitHub(events);
-
-
   cancellationPending =
     false;
 
@@ -4070,7 +3447,7 @@ async function confirmCancellation(){
    ABSAGE AUFHEBEN
 --------------------------------- */
 
-async function uncancelEvent(){
+function uncancelEvent(){
 
   if(
     !isAdmin() ||
@@ -4103,9 +3480,6 @@ async function uncancelEvent(){
 
   events[index].cancelReason =
     "";
-
-
-  await saveEventsToGitHub(events);
 
 
   document.getElementById(
@@ -4147,7 +3521,7 @@ async function uncancelEvent(){
    LÖSCHEN
 --------------------------------- */
 
-async function deleteEvent(id){
+function deleteEvent(id){
 
   if(!isAdmin()){
 
@@ -4186,9 +3560,6 @@ async function deleteEvent(id){
       item =>
         item.id !== id
     );
-
-
-  await saveEventsToGitHub(events);
 
 
   closeModal(
