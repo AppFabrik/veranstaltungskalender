@@ -2055,10 +2055,11 @@ async function saveEventsToGitHub(allEvents) {
   const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`;
 
   try {
-    let sha = "";
-    const getRes = await fetch(url, {
+    let sha = null;
+    const getRes = await fetch(url + "?" + new Date().getTime(), {
       headers: {
-        "Authorization": `token ${GITHUB_TOKEN}`
+        "Authorization": `token ${GITHUB_TOKEN}`,
+        "Accept": "application/vnd.github.v3+json"
       }
     });
     if (getRes.ok) {
@@ -2067,13 +2068,17 @@ async function saveEventsToGitHub(allEvents) {
     }
 
     const jsonString = JSON.stringify(allEvents, null, 2);
-    const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+    // Sichere Base64-Codierung für Umlaute und Sonderzeichen
+    const base64Content = btoa(encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+      return String.fromCharCode('0x' + p1);
+    }));
 
     const putBody = {
       message: "Update events.json via Admin Dashboard",
       content: base64Content,
       branch: GITHUB_BRANCH
     };
+    
     if (sha) {
       putBody.sha = sha;
     }
@@ -2082,7 +2087,8 @@ async function saveEventsToGitHub(allEvents) {
       method: "PUT",
       headers: {
         "Authorization": `token ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Accept": "application/vnd.github.v3+json"
       },
       body: JSON.stringify(putBody)
     });
@@ -2092,8 +2098,8 @@ async function saveEventsToGitHub(allEvents) {
       setTimeout(loadEvents, 1500);
     } else {
       const errJson = await putRes.json();
-      console.error("GitHub Fehler:", errJson);
-      showToast("⚠️ Fehler beim Speichern auf GitHub.");
+      console.error("GitHub Fehler Detail:", errJson);
+      showToast("⚠️ Fehler beim Speichern: " + (errJson.message || "Unbekannter Fehler"));
     }
   } catch (err) {
     console.error("Netzwerkfehler:", err);
