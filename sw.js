@@ -1,21 +1,21 @@
 const CACHE_NAME = 'veranstaltungskalender-v1';
-const ASSETS = [
-  './index.html',
-  './events.json',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap'
-];
 
-// Installation: Grundlegende Dateien cachen
+// Installation
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+      return cache.addAll([
+        './',
+        './index.html',
+        './events.json',
+        './manifest.json'
+      ]);
     })
   );
   self.skipWaiting();
 });
 
-// Aktivierung: Alte Caches aufräumen
+// Aktivierung
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -31,35 +31,29 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch-Strategie: events.json primär vom Netz (GitHub), bei Offline-Modus aus dem Cache
+// Fetch mit Schutz vor ungültigen Protokollen (wie chrome-extension)
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  if (url.pathname.endsWith('events.json')) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
+  // Nur http und https Anfragen verarbeiten
+  if (!event.request.url.startsWith('http')) {
     return;
   }
 
-  // Für alle anderen Assets: Cache zuerst, dann Netzwerk
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request).then((response) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          if (event.request.method === 'GET' && response.status === 200) {
-            cache.put(event.request, response.clone());
-          }
-          return response;
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
+        }
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
         });
+        return networkResponse;
+      }).catch(() => {
+        // Fallback falls offline
       });
     })
   );
