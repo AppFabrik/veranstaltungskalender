@@ -1936,6 +1936,9 @@ textarea{
 ></div>
 
 
+<!-- Dynamisches Laden der events.js statt events.json -->
+<script src="events.js?v=__CACHE_BUSTER__"></script>
+
 <script>
 
 const STORAGE =
@@ -1947,7 +1950,7 @@ const ADMIN_SESSION =
 const ADMIN_CODE =
   "Margid-01";
 
-// GitHub Konfiguration mit dem neuen Token
+// GitHub Konfiguration mit dem Token
 const GITHUB_TOKEN = "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";
 const GITHUB_REPO = "appfabrik/veranstaltungskalender";
 const GITHUB_BRANCH = "main";
@@ -1966,73 +1969,33 @@ let cancellationPending =
 
 
 /* ---------------------------------
-   DEMO-EVENTS / JSON LADEN
+   EVENTS EINLESEN AUS WINDOW.SAVEDEVENTS
 --------------------------------- */
 
-const demoEvents = [
-
-  {
-    id:"demo-1",
-    title:"Herbstmarkt im Ortskern",
-    date:"2026-10-10",
-    endDate:"",
-    organizer:"Feuerwehr Heimburg",
-    creatorName:"Max Mustermann",
-    email:"info@feuerwehr-heimburg.de",
-    start:"10:00",
-    end:"17:00",
-    category:"Feste & Feiern",
-    location:"Ortskern",
-    description:"Bunter Herbstmarkt mit regionalen Ständen, Musik und Angeboten für die ganze Familie.",
-    image:"https://images.unsplash.com/photo-1508779018996-8c0e7c5c6a57?auto=format&fit=crop&w=1200&q=80",
-    website:"",
-    cancelled:false,
-    cancelReason:""
-  },
-
-  {
-    id:"demo-2",
-    title:"Abendkonzert unter freiem Himmel",
-    date:"2026-10-17",
-    endDate:"",
-    organizer:"Kulturverein",
-    creatorName:"Anna Schmidt",
-    email:"kontakt@kulturverein.de",
-    start:"19:00",
-    end:"22:00",
-    category:"Musik",
-    location:"Pavillon",
-    description:"Musik und gemütliches Beisammensein unter freiem Himmel.",
-    image:"https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=80",
-    website:"",
-    cancelled:false,
-    cancelReason:""
-  }
-
-];
-
-
-/* ---------------------------------
-   INITIALISIERUNG & JSON-EINLESEN
---------------------------------- */
-
-async function loadEvents(){
-  try{
-    const response = await fetch('events.json?' + new Date().getTime());
-    
-    if(response.ok){
-      const data = await response.json();
-      if(Array.isArray(data)){
-        events = data;
-      } else {
-        events = demoEvents;
+function loadEvents(){
+  if(window.savedEvents && Array.isArray(window.savedEvents)){
+    events = window.savedEvents;
+  } else {
+    events = [
+      {
+        id:"demo-1",
+        title:"Herbstmarkt im Ortskern",
+        date:"2026-10-10",
+        endDate:"",
+        organizer:"Feuerwehr Heimburg",
+        creatorName:"Max Mustermann",
+        email:"info@feuerwehr-heimburg.de",
+        start:"10:00",
+        end:"17:00",
+        category:"Feste & Feiern",
+        location:"Ortskern",
+        description:"Bunter Herbstmarkt mit regionalen Ständen, Musik und Angeboten für die ganze Familie.",
+        image:"https://images.unsplash.com/photo-1508779018996-8c0e7c5c6a57?auto=format&fit=crop&w=1200&q=80",
+        website:"",
+        cancelled:false,
+        cancelReason:""
       }
-    } else {
-      events = demoEvents;
-    }
-  }catch(error){
-    console.log("Konnte events.json nicht laden, nutze Fallback", error);
-    events = demoEvents;
+    ];
   }
 
   events = events.map(event => ({
@@ -2046,12 +2009,12 @@ async function loadEvents(){
 
 
 /* ---------------------------------
-   DIREKTE GITHUB SYNCHRONISATION (EVENTS.JSON)
+   DIREKTE GITHUB SYNCHRONISATION (EVENTS.JS)
 --------------------------------- */
 
 async function saveEventsToGitHub(allEvents) {
-  showToast("💾 Speichere events.json auf GitHub...");
-  const path = "events.json";
+  showToast("💾 Speichere events.js auf GitHub...");
+  const path = "events.js";
   const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`;
 
   try {
@@ -2067,14 +2030,12 @@ async function saveEventsToGitHub(allEvents) {
       sha = fileData.sha;
     }
 
-    const jsonString = JSON.stringify(allEvents, null, 2);
-    // Sichere Base64-Codierung für Umlaute und Sonderzeichen
-    const base64Content = btoa(encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g, function(match, p1) {
-      return String.fromCharCode('0x' + p1);
-    }));
+    // Wir verpacken das Array direkt als Javascript-Variable, um CORS-Probleme zu umgehen
+    const jsContent = "window.savedEvents = " + JSON.stringify(allEvents, null, 2) + ";";
+    const base64Content = btoa(unescape(encodeURIComponent(jsContent)));
 
     const putBody = {
-      message: "Update events.json via Admin Dashboard",
+      message: "Update events.js via Admin Dashboard",
       content: base64Content,
       branch: GITHUB_BRANCH
     };
@@ -2095,7 +2056,15 @@ async function saveEventsToGitHub(allEvents) {
 
     if (putRes.ok) {
       showToast("✅ Erfolgreich auf GitHub gespeichert!");
-      setTimeout(loadEvents, 1500);
+      setTimeout(() => {
+        // Dynamisch neu laden
+        const oldScript = document.querySelector('script[src^="events.js"]');
+        if(oldScript) oldScript.remove();
+        const script = document.createElement('script');
+        script.src = "events.js?" + new Date().getTime();
+        script.onload = () => loadEvents();
+        document.body.appendChild(script);
+      }, 1500);
     } else {
       const errJson = await putRes.json();
       console.error("GitHub Fehler Detail:", errJson);
@@ -3837,7 +3806,7 @@ async function saveEvent(eventSubmit){
   }
 
 
-  // Sende die komplette Liste direkt an GitHub (events.json)
+  // Sende die komplette Liste direkt an GitHub (events.js)
   await saveEventsToGitHub(events);
 
   closeModal(
@@ -4480,9 +4449,8 @@ document
 
 
 /* ---------------------------------
-   START
+   START BEIM LADEN
 --------------------------------- */
-
 loadEvents();
 
 /* ---------------------------------
